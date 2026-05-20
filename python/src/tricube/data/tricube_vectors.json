@@ -1,0 +1,22 @@
+{
+  "algorithm": "TriCube",
+  "status": "experimental",
+  "digest_bytes": 32,
+  "hash_vectors": [
+    {
+      "name": "empty",
+      "message_hex": "",
+      "digest_hex": "7fcaaa35165277bcaca583e23ef1d3545705e14d39f3ed7a802b1275d920cf49"
+    },
+    {
+      "name": "abc",
+      "message_hex": "616263",
+      "digest_hex": "779403a9c748fc3213493953fc17309367b37161c00dc19059c14db63774e11e"
+    },
+    {
+      "name": "project-name",
+      "message_hex": "54726943756265",
+      "digest_hex": "5b4c461fe975dfba72fc9b2fbcf04e3a1a807c83fa4502c238ee4fe48b736d13"
+    }
+  ]
+}

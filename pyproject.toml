@@ -3,11 +3,11 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tricube-hash"
+name = "tricube"
 version = "0.1.0"
-description = "Experimental geometric hash/XOF candidate based on tetrahedral cube-connected state evolution."
-readme = "README.md"
-requires-python = ">=3.11"
+description = "Experimental geometric hash and XOF research package"
+readme = "python/README.md"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
   {name = "Steven Reid"}
@@ -17,9 +17,13 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: C",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Security :: Cryptography",
   "Topic :: Scientific/Engineering",
 ]
@@ -33,9 +37,10 @@ dev = ["pytest", "build", "twine"]
 Homepage = "https://github.com/RRG314/tricube-hash"
 Repository = "https://github.com/RRG314/tricube-hash"
 Issues = "https://github.com/RRG314/tricube-hash/issues"
+Paper = "https://github.com/RRG314/tricube-hash/tree/main/paper"
 
 [project.scripts]
-tricube-py = "tricube.cli:main"
+tricube = "tricube.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "python/src"}
@@ -43,6 +48,9 @@ package-dir = {"" = "python/src"}
 [tool.setuptools.packages.find]
 where = ["python/src"]
 
+[tool.setuptools.package-data]
+tricube = ["py.typed", "data/*.json"]
+
 [tool.pytest.ini_options]
-testpaths = ["python/tests", "tests/smoke"]
+testpaths = ["python/tests"]
 pythonpath = ["python/src"]

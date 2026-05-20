@@ -65,9 +65,10 @@ The public C header is [c/include/tricube.h](c/include/tricube.h). It exposes fi
 The Python CLI is available after installation:
 
 ```bash
-tricube-py hash --hex 616263
-tricube-py xof --hex 616263 --bytes 64
-tricube-py stream --seed 123 --bytes 1024 --out stream.bin
+python -m tricube hash --hex 616263
+python -m tricube xof --hex 616263 --bytes 64
+python -m tricube stream --seed 123 --bytes 1024 --out stream.bin
+tricube self-test
 ```
 
 ## Design Summary
@@ -184,4 +185,3 @@ AI assistance was used to help organize code, documentation, tests, and manuscri
 ## License
 
 TriCube is released under the MIT License. See [LICENSE](LICENSE).
-

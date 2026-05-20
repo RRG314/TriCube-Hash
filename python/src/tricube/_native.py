@@ -7,19 +7,20 @@ locally built CLI when one is present.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
-import shutil
 
 
 def find_cli() -> Path | None:
     """Return a usable TriCube CLI path if one is available."""
 
-    exe = shutil.which("tricube")
-    if exe:
-        return Path(exe)
+    configured = os.environ.get("TRICUBE_C_CLI")
+    if configured:
+        path = Path(configured)
+        if path.exists():
+            return path
     root = Path(__file__).resolve().parents[4]
     candidate = root / "c" / "build" / "tricube"
     if candidate.exists():
         return candidate
     return None
-
