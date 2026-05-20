@@ -42,7 +42,7 @@ make -C c all
 python tools/generate_vectors.py > tests/vectors/tricube_vectors.json
 ```
 
-The C and Python implementations should agree on the saved vectors.
+The C and Python implementations should agree on the fixed vectors.
 
 ## Benchmark Smoke Runs
 
@@ -63,4 +63,3 @@ tools/run_testu01.sh smallcrush 1073741824
 ```
 
 Each run should save command output, seed, byte count, tool version where available, and final interpretation.
-

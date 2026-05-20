@@ -68,9 +68,9 @@ The public 256-bit digest vectors are:
 
 ## 7. Current Evidence
 
-The May 2026 validation pass found that the C stream path was deterministic and much faster than the Python reference path. In the saved 1 MiB internal check, the C stream measured about 44.3 MiB/s on an Apple M4 Pro Mac mini. Basic entropy, bit-balance, serial-correlation, and avalanche sanity checks did not show obvious failure at that size.
+The May 2026 validation pass found that the C stream path was deterministic and fast enough for longer external statistical batteries. In the public refresh run, the standalone C stream path measured about 51.5 MiB/s on an Apple M4 Pro Mac mini; a local package smoke run measured about 53.1 MiB/s. The current hash path remains slower, measuring about 14.7 MiB/s for 1024-byte messages at 16 rounds.
 
-Saved external artifacts include a limited Dieharder pass, a TestU01 SmallCrush pass, and a PractRand 1 GiB expanded run classified as WARN. The PractRand run reached 1 GiB and ended with no final-level anomalies, but it reported earlier low-bit suspicious and unusual results. That warning is the most important current test finding.
+The external statistical-battery evidence includes SmokeRand express PASS (7/7), NIST STS standard check PASS, TestU01 SmallCrush PASS (15/15), TestU01 Crush PASS (144/144), and a Dieharder battery result of 109 PASS, 2 WEAK, and 0 FAIL. PractRand remains the main warning: the 1 GiB expanded run ended with no final-level anomalies in 2050 final-level results, but earlier levels reported suspicious and unusual low-bit behavior. That warning is the most important current test finding.
 
 ## 8. Limitations
 
@@ -104,4 +104,3 @@ TriCube is a concrete experimental candidate, not a secure primitive. The strong
 This work received no external funding. The author reports no external financial conflict of interest related to this repository. AI assistance was used to organize code, documentation, tests, and manuscript material. The design, claims, limitations, and interpretation remain the responsibility of the author.
 
 Code availability: https://github.com/RRG314/tricube-hash
-

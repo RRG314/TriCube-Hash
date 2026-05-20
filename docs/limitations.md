@@ -25,7 +25,6 @@ TriCube is not ready for security use. The current project should be treated as 
 - Differential and rotational analysis are incomplete.
 - Algebraic structure analysis is incomplete.
 - Birthday collision experiments are small relative to cryptographic claims.
-- Long multi-seed PractRand, TestU01 Crush/BigCrush, NIST STS, and SmokeRand campaigns remain open.
+- Long multi-seed PractRand, TestU01 Crush reruns, TestU01 BigCrush, larger NIST STS, and SmokeRand full campaigns remain open.
 
 These limitations are intentional in the public documentation. They prevent the project from implying a stronger security status than the evidence supports.
-

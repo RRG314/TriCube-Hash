@@ -1,22 +1,18 @@
 # TriCube
 
-TriCube is an experimental hash, extendable-output function (XOF), and deterministic stream generator built around a geometric state update. The current implementation represents the internal state as a small cube-connected vertex grid, decomposes the cube cells into tetrahedra, applies local tetrahedral mixing, couples neighboring vertices, and squeezes bytes from the evolved state.
+TriCube is an experimental hash, extendable-output function (XOF), and deterministic stream generator based on tetrahedral/cube-connected state evolution. The current implementation uses a 2048-bit state arranged as a cube-vertex grid plus shell lanes; each round mixes local tetrahedral groups, propagates across cube edges, couples shell lanes, and squeezes output from the evolved state.
 
-The project is meant for cryptographic engineering research. It is not a secure hash standard, not production ready, and not a replacement for SHA-2, SHA-3/SHAKE, BLAKE2, or BLAKE3. Current evidence is enough to justify continued testing and outside review, but it does not establish collision resistance, preimage resistance, pseudorandomness, or security for any real application.
+TriCube is a cryptographic engineering research project, not a secure primitive. It is not production ready, not a replacement for SHA-2, SHA-3/SHAKE, BLAKE2, or BLAKE3, and should not be used for security-critical applications. The current evidence supports continued development and external review. It does not establish collision resistance, preimage resistance, pseudorandomness, or real-world security.
 
-## What This Repository Contains
+## Current Status
 
-This repository contains a standalone C11 implementation, a Python reference package, fixed test vectors, CLI tools, reproducibility notes, benchmark scripts, and a cleaned result summary from the May 2026 validation pass.
+The repository contains a standalone C11 implementation, a Python reference package, fixed test vectors, CLI tools, benchmarks, reproducibility notes, external-battery run scripts, a cleaned result summary, and a manuscript draft.
 
-The C implementation is the primary implementation path. Python exposes a small API for scripting and tests, and keeps a pure Python reference path so the package remains inspectable without native build steps.
+The strongest current result is that TriCube now has a concrete geometric construction with reproducible C/Python vectors and nontrivial statistical-battery evidence. The main open issues are low-bit PractRand warnings, incomplete cryptanalysis, and performance that is still below mature optimized hash implementations.
 
-## Security Status
+## Quick Start
 
-TriCube is experimental. Do not use it for passwords, signatures, message authentication, key derivation, blockchain consensus, production random streams, encrypted storage, or any security-critical system.
-
-The current evidence consists of deterministic test vectors, C/Python agreement tests, unit tests, internal statistical sanity checks, selected Dieharder/TestU01/PractRand artifacts, throughput checks, and structural probes from the research archive. Statistical batteries can find defects, but passing them does not prove cryptographic security. No independent cryptanalysis has been completed.
-
-## Build the C Implementation
+Build and test the C implementation:
 
 ```bash
 git clone https://github.com/RRG314/tricube-hash.git
@@ -24,22 +20,13 @@ cd tricube-hash
 make -C c test
 ```
 
-This builds the CLI at `c/build/tricube` and runs the C self-test plus vector and stream tests.
-
-The C CLI supports:
+Hash a message with the C CLI:
 
 ```bash
-c/build/tricube self-test
-c/build/tricube vectors
 c/build/tricube hash --hex 616263
-c/build/tricube hash path/to/file.bin
-c/build/tricube xof --hex 616263 --bytes 64
-c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin
 ```
 
-The library header is `c/include/tricube.h`. It exposes fixed 256-bit digest mode, XOF mode, context-style update/finalize/squeeze functions, deterministic stream generation, and a self-test.
-
-## Install the Python Package
+Install the Python package for local development:
 
 ```bash
 python -m venv .venv
@@ -48,7 +35,7 @@ python -m pip install -e ".[test]"
 pytest -q
 ```
 
-The package import name is `tricube`:
+Use the Python API:
 
 ```python
 import tricube
@@ -60,7 +47,22 @@ out = tricube.xof(b"abc", 64)
 stream = tricube.stream(seed=123, n=1024)
 ```
 
-The Python CLI is available as:
+## Build and CLI
+
+The C implementation is the primary implementation path. It is standalone C11 and does not require Python at runtime.
+
+```bash
+c/build/tricube self-test
+c/build/tricube vectors
+c/build/tricube hash --hex 616263
+c/build/tricube hash path/to/file.bin
+c/build/tricube xof --hex 616263 --bytes 64
+c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin
+```
+
+The public C header is [c/include/tricube.h](c/include/tricube.h). It exposes fixed 256-bit digest mode, XOF mode, context-style update/finalize/squeeze functions, deterministic stream generation, and self-test support.
+
+The Python CLI is available after installation:
 
 ```bash
 tricube-py hash --hex 616263
@@ -70,45 +72,78 @@ tricube-py stream --seed 123 --bytes 1024 --out stream.bin
 
 ## Design Summary
 
-TriCube uses a 2048-bit state arranged as 32 64-bit lanes. Twenty-seven lanes correspond to a 3 x 3 x 3 vertex grid; the remaining lanes act as shell/global lanes. The eight cube cells of the 2 x 2 x 2 block are each decomposed into six tetrahedra. A round applies orientation-dependent tetrahedral ARX mixing, edge coupling over adjacent vertices, shell coupling, and a global lane permutation.
+TriCube uses 32 lanes of 64 bits each. Twenty-seven lanes correspond to a 3 x 3 x 3 vertex grid; the remaining lanes act as shell/global lanes. The eight cube cells of the 2 x 2 x 2 block are each decomposed into six tetrahedra. A round applies orientation-dependent tetrahedral ARX mixing, edge coupling over adjacent vertices, shell coupling, and a global lane permutation.
 
-Input bytes are absorbed into the state with domain separation and length encoding. Digest mode squeezes 32 bytes. XOF mode squeezes an arbitrary number of bytes. Stream mode initializes from a seed and emits deterministic blocks for testing external statistical batteries.
+Input bytes are absorbed with domain separation and length encoding. Digest mode squeezes 32 bytes. XOF mode squeezes an arbitrary number of bytes. Stream mode initializes from a seed and emits deterministic blocks for statistical testing.
 
 The candidate novelty is the cube/tetrahedral state evolution and propagation schedule. It is not the use of hashing, XOFs, ARX operations, or sponge-like absorb/squeeze structure, all of which are established design families.
 
-See [docs/design.md](docs/design.md) for details.
+See [docs/design.md](docs/design.md) for the construction details.
 
-## Current Results
+## Main Results
 
-The May 2026 validation pass should be read as a research snapshot, not a security certificate.
+The following tables summarize the May 2026 validation evidence. These are engineering and statistical-screening results, not security proofs.
 
-| Area | Current result | Interpretation |
-|---|---|---|
-| C self-test and fixed vectors | pass | Implementation is deterministic for saved vectors. |
-| C/Python vector agreement | pass in local tests | Python reference and C path agree on public vectors. |
-| Internal 1 MiB statistical sanity checks | pass for the current C stream path | Basic byte/bit metrics did not show obvious failure. |
-| Dieharder saved artifact | pass in saved run, but artifact covered a limited report set | Useful but incomplete. |
-| TestU01 SmallCrush saved artifact | pass in saved run | Useful sanity evidence, not BigCrush-level evidence. |
-| PractRand 1 GiB expanded run | warn | Final level reported no anomalies, but earlier low-bit warnings must be investigated. |
-| Throughput | about 44 MiB/s in the saved C stream check | Not yet competitive with mature optimized hashes. |
+### Statistical Batteries
 
-The cleaned result report is [results/consolidated-results-2026-05-19.md](results/consolidated-results-2026-05-19.md). The PractRand 1 GiB summary and log are in [results/raw/](results/raw/).
+| Evaluation | Result | Notes |
+|---|---:|---|
+| SmokeRand express | PASS, 7/7 | 83,971,072 bytes processed; all seven express tests reported `Ok`. |
+| NIST STS standard check | PASS | 10 sequences x 1,000,000 bits; 188 parsed rows, 0 starred rows, 0 failed-proportion rows. |
+| TestU01 SmallCrush | PASS, 15/15 | TestU01 1.2.3 reported all SmallCrush tests passed. |
+| TestU01 Crush | PASS, 144/144 | Full Crush completed in about 26 min CPU time and reported all tests passed. |
+| Dieharder battery | 109 PASS / 2 WEAK / 0 FAIL | Two weak p-values occurred in STS serial rows; no failures. Weak rows are expected occasionally and require reruns, not triumphal interpretation. |
+| PractRand core to 512 MiB | WARN / no escalation | One early 16 KiB unusual result; no anomalies from 32 KiB through 512 MiB. |
+| PractRand expanded to 1 GiB | WARN | Final 1 GiB level reported no anomalies in 2050 results, but earlier low-bit NS3 warnings require follow-up. |
 
-## Benchmarks
+### Structural Probes
 
-Quick local benchmarks:
+| Probe | Result | Notes |
+|---|---:|---|
+| Truncated birthday collision checks | PASS | 16/24/32/48/64-bit prefix collision counts were close to birthday expectation under practical sample sizes. |
+| Full-digest collision smoke | PASS | 0 full digest collisions and 0 prefix64 collisions over 20,000 sampled messages. |
+| Message-bit diffusion | PASS | 16-round mean changed bits: 127.819 of 256 over 8,192 samples. |
+| Differential probes | PASS | Across tested deltas and rounds, mean changed bits stayed near 128; no repeated output differences were observed. |
+| Rotational probes | PASS | No exact rotational relation was observed; mean rotational distances stayed near 128 bits. |
+| Domain/tweak separation | PASS | 5/5 unique digests; minimum hamming distance from default case was 121 bits. |
+| State-recovery screen | PASS | Next-byte prediction accuracy 0.00396061, near the random baseline of 1/256. |
+| Overlap/fork stream test | PASS | 0 repeated 32-byte block overlaps across 4 streams and 262,144 tested blocks. |
+
+### Throughput
+
+Stream throughput is usable for external batteries; hash throughput is still the main engineering weakness. Values below are from local May 2026 runs on an Apple M4 Pro Mac mini unless noted.
+
+| Implementation / mode | Throughput |
+|---|---:|
+| `tricube_tc256_xof_fast` stream candidate | ~80.2 MiB/s |
+| `tricube_geo256_chain_fast` stream candidate | ~62.3 MiB/s |
+| `tricube_tetra_block256_chain_fast` stream candidate | ~57.3 MiB/s |
+| Current standalone C TriCube stream | ~51.5 MiB/s in refresh run; ~53.1 MiB/s in local package smoke run |
+| `sha256_counter_chain` Python harness control | ~51.3 MiB/s |
+| Current standalone C TriCube hash, 1024-byte messages, 16 rounds | ~14.7 MiB/s |
+
+These numbers are not a claim of competitiveness with optimized SHA-2, SHA-3, BLAKE2, or BLAKE3 libraries. They identify where the current prototype is usable and where it needs engineering work.
+
+### Interpretation
+
+TriCube has moved past a sketch: it has a concrete geometric state model, a C implementation, a Python interface, fixed vectors, battery results, structural probes, and reproducible commands. The strongest positive evidence is the TestU01 Crush pass, the Dieharder result with no failures, the absence of obvious structural failures in the current probes, and the fact that the C stream path is fast enough for longer batteries.
+
+The strongest negative evidence is also clear: PractRand flagged low-bit behavior, cryptanalysis is incomplete, and hash throughput is not yet competitive. The responsible conclusion is that TriCube deserves further review and hardening, not security use.
+
+The full public evidence summary is [results/consolidated-results-2026-05-19.md](results/consolidated-results-2026-05-19.md).
+
+## Reproducing Results
+
+Quick local checks:
 
 ```bash
-python benchmarks/bench_throughput.py --quick
-python benchmarks/bench_hash_sizes.py --quick
+make -C c test
+python -m pip install -e ".[test]"
+pytest -q
 python benchmarks/bench_stream.py --bytes 1048576
 ```
 
-The benchmark scripts compare TriCube against Python `hashlib` SHA-256 and SHA3-256 where practical. Those comparisons are performance references only. Mature hashes have extensive analysis and optimized implementations; TriCube does not.
-
-## Reproducing External Batteries
-
-External batteries are intentionally kept as commands rather than bundled logs:
+External batteries are run from the C stream path:
 
 ```bash
 make -C c all
@@ -117,29 +152,30 @@ tools/run_dieharder.sh 1073741824
 tools/run_testu01.sh smallcrush 1073741824
 ```
 
-See [tools/run_stat_batteries.md](tools/run_stat_batteries.md) and [docs/testing.md](docs/testing.md) before interpreting results.
+See [tools/run_stat_batteries.md](tools/run_stat_batteries.md), [docs/testing.md](docs/testing.md), and [docs/reproducibility.md](docs/reproducibility.md) before interpreting results.
 
-## Limitations
+## Security Limitations
 
-The important limitations are direct:
+TriCube is not secure for production use. The limitations are direct:
 
 - no security proof;
-- no independent review;
+- no independent cryptanalysis;
 - no collision-resistance or preimage-resistance claim;
 - incomplete reduced-round, differential, rotational, algebraic, and state-recovery analysis;
-- low-bit PractRand warnings in the saved 1 GiB run;
+- unresolved low-bit PractRand warnings;
+- no side-channel or constant-time review;
 - performance is not competitive with mature optimized hashes;
 - statistical batteries do not prove cryptographic security.
 
-See [docs/limitations.md](docs/limitations.md) for the full limitation list.
+See [docs/security-status.md](docs/security-status.md) and [docs/limitations.md](docs/limitations.md) for the full security boundary.
 
 ## Paper and Citation
 
-The current manuscript draft is in [paper/](paper/). The draft explains where TriCube came from, its construction, current evidence, and the open security work required before stronger claims would be responsible.
+The manuscript draft is in [paper/](paper/). It explains where TriCube came from, the current construction, the available evidence, and the analysis still required before stronger claims would be responsible.
 
 If you use this repository in research, cite [CITATION.cff](CITATION.cff).
 
-## Funding and Conflicts
+## Funding, Conflicts, and Assistance
 
 This work received no external funding. The author reports no external financial conflict of interest related to this repository.
 
