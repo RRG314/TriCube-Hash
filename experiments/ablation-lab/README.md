@@ -12,13 +12,13 @@ keeps only the result that passed the current screening threshold:
 The faster experimental paths are documented here but are not included in the
 public C API. They produced higher throughput by widening the extraction rate or
 batching output, but the strongest versions also produced low-bit PractRand
-warnings or failures. Those variants remain private research notes until the
-failure mode is understood.
+warnings or failures. Those variants remain excluded until the failure mode is
+understood.
 
 ## Why fast8x was added
 
-`fast8x` was the best speed/safety tradeoff in the private ablation pass. On the
-same local Apple M4 Pro machine used for the May 2026 result refresh, it
+`fast8x` was the best speed/safety tradeoff in the ablation pass. On the
+same Apple M4 Pro machine used for the May 2026 result refresh, it
 measured about `132.65 MiB/s` for a 256 MiB stream run, compared with about
 `69.80 MiB/s` for the released baseline in the same harness.
 
@@ -32,7 +32,7 @@ The same ablation record lists `fast8x` as clean through:
 - PractRand 1 GiB screen;
 - SmokeRand express, 7/7 tests;
 - TestU01 SmallCrush, 15/15 tests;
-- internal 16 MiB sanity probes with no repeated 32-byte blocks.
+- 16 MiB sanity probes with no repeated 32-byte blocks.
 
 These checks are not security claims. They justify keeping `fast8x` available
 for continued testing, not using TriCube in security-critical systems.
@@ -45,8 +45,8 @@ Compared with the baseline stream path:
 - initialization uses 8 rounds instead of 12;
 - each stream block update uses 4 rounds instead of 6;
 - the output rate is widened from 192 bytes to 256 bytes per state update;
-- output words pass through an additional internal xmix layer derived from the
-  TriCube state and round constants.
+- output words pass through an additional xmix layer derived from the TriCube
+  state and round constants.
 
 The hash API, digest vectors, XOF API, and default stream behavior remain
 unchanged. Users must explicitly request the variant:
@@ -84,5 +84,5 @@ The compact public tables are:
 - [tables/candidate_recommendations.csv](tables/candidate_recommendations.csv)
 - [tables/branch_smoke_stream_bench.csv](tables/branch_smoke_stream_bench.csv)
 
-Large raw streams, full terminal transcripts, and rejected C implementations are
+Large generated streams, full terminal transcripts, and rejected C implementations are
 not included in this public branch.

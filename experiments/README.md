@@ -1,9 +1,9 @@
 # Experiments
 
 This directory contains small, public-facing experiment records that explain why
-selected implementation changes entered the repository. It is not a raw
-research archive. Large logs, scratch scripts, generated streams, and rejected
-implementation branches are intentionally left out.
+selected implementation changes entered the repository. It is not a log archive.
+Large terminal transcripts, generated streams, development-only scripts, and
+rejected implementation branches are intentionally left out.
 
 The current experiment record is the TriCube stream ablation lab. Its main
 purpose is to document why the `fast8x` stream variant was added as an

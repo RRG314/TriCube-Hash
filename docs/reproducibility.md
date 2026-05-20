@@ -1,6 +1,6 @@
 # Reproducibility
 
-This repository is organized so a reviewer can rebuild the C implementation, install the Python package, run tests, regenerate vectors, and rerun the public benchmark scripts without relying on private machine paths.
+This repository is organized so a reviewer can rebuild the C implementation, install the Python package, run tests, regenerate vectors, and rerun the public benchmark scripts without relying on machine-specific paths.
 
 ## Environment
 

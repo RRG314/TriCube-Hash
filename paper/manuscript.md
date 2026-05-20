@@ -10,7 +10,7 @@ TriCube is an experimental hash, extendable-output function, and deterministic s
 
 ## 1. Introduction
 
-TriCube grew out of a series of notebook and local-repository experiments on recursive geometric mixing, entropy diagnostics, and byte-stream generators. Several earlier candidates used cube or tetrahedron language but did not explicitly model a tetrahedral state topology. The current version was separated from that broader archive into a narrower project: a concrete geometric hash/XOF candidate with standalone C code, Python reference code, fixed vectors, and reproducible tests.
+TriCube grew out of a series of notebook and repository experiments on recursive geometric mixing, entropy diagnostics, and byte-stream generators. Several earlier candidates used cube or tetrahedron language but did not explicitly model a tetrahedral state topology. The current version was separated from that broader research line into a narrower project: a concrete geometric hash/XOF candidate with standalone C code, Python reference code, fixed vectors, and reproducible tests.
 
 The purpose of this release is not to claim a new secure hash. The purpose is to make the construction inspectable enough for review. The repository removes unsupported claims, keeps the implementation deterministic, and records both positive and negative evidence.
 
@@ -68,7 +68,7 @@ The public 256-bit digest vectors are:
 
 ## 7. Current Evidence
 
-The May 2026 validation pass found that the C stream path was deterministic and fast enough for longer external statistical batteries. In the public refresh run, the standalone C stream path measured about 51.5 MiB/s on an Apple M4 Pro Mac mini; a local package smoke run measured about 53.1 MiB/s. The current hash path remains slower, measuring about 14.7 MiB/s for 1024-byte messages at 16 rounds.
+The May 2026 validation pass found that the C stream path was deterministic and fast enough for longer external statistical batteries. In the public refresh run, the standalone C stream path measured about 51.5 MiB/s on an Apple M4 Pro Mac mini; a package smoke run measured about 53.1 MiB/s. The current hash path remains slower, measuring about 14.7 MiB/s for 1024-byte messages at 16 rounds.
 
 The external statistical-battery evidence includes SmokeRand express PASS (7/7), NIST STS standard check PASS, TestU01 SmallCrush PASS (15/15), TestU01 Crush PASS (144/144), and a Dieharder battery result of 109 PASS, 2 WEAK, and 0 FAIL. PractRand remains the main warning: the 1 GiB expanded run ended with no final-level anomalies in 2050 final-level results, but earlier levels reported suspicious and unusual low-bit behavior. That warning is the most important current test finding.
 
@@ -93,7 +93,7 @@ pytest -q
 python benchmarks/bench_stream.py --bytes 1048576
 ```
 
-External batteries can be run with the scripts in `tools/`, provided the tools are installed locally.
+External batteries can be run with the scripts in `tools/`, provided the tools are installed by the reviewer.
 
 ## 11. Conclusion
 

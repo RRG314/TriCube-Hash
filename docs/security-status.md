@@ -2,7 +2,7 @@
 
 TriCube is experimental and should not be used for security-critical work.
 
-The current implementation has deterministic tests, fixed vectors, C/Python agreement checks, internal statistical checks, and several external-battery evaluations. Those results are useful for engineering triage. They are not a proof of security.
+The current implementation has deterministic tests, fixed vectors, C/Python agreement checks, project statistical checks, and several external-battery evaluations. Those results are useful for engineering triage. They are not a proof of security.
 
 ## Known Evidence
 

@@ -3,7 +3,7 @@
  *
  * fast8x is an experimental stream/XOF-oriented variant selected from the
  * ablation lab because it improved throughput without the low-bit failures
- * seen in faster private variants. The core permutation, state schedule, and
+ * seen in faster tested variants. The core permutation, state schedule, and
  * xmix extraction path remain centralized in tricube.c so the implementation
  * does not fork into a second primitive.
  *

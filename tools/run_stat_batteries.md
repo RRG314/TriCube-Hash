@@ -49,4 +49,4 @@ VARIANT=fast8x TESTU01_STDIN=path/to/testu01_stdin32 tools/run_testu01.sh smallc
 ```
 
 The `testu01_stdin32` wrapper is not part of upstream TestU01; it must be built
-locally or provided by the user.
+by the reviewer or provided as an existing executable.

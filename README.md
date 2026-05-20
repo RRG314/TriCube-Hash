@@ -6,7 +6,7 @@ TriCube is a cryptographic engineering research project, not a secure primitive.
 
 ## Current Status
 
-The repository contains a standalone C11 implementation, a Python reference package, fixed test vectors, CLI tools, benchmarks, reproducibility notes, external-battery run scripts, a cleaned result summary, and a manuscript draft.
+The repository contains a standalone C11 implementation, a Python reference package, fixed test vectors, CLI tools, benchmarks, reproducibility notes, external-battery run scripts, a result summary, and a manuscript.
 
 The strongest current result is that TriCube now has a concrete geometric construction with reproducible C/Python vectors and nontrivial statistical-battery evidence. The main open issues are low-bit PractRand warnings, incomplete cryptanalysis, and performance that is still below mature optimized hash implementations.
 
@@ -124,7 +124,7 @@ domain-separated from the baseline and must be requested explicitly with
 
 ### Throughput
 
-Stream throughput is usable for external batteries; hash throughput is still the main engineering weakness. Values below are from local May 2026 runs on an Apple M4 Pro Mac mini unless noted.
+Stream throughput is usable for external batteries; hash throughput is still the main engineering weakness. Values below are from May 2026 runs on an Apple M4 Pro Mac mini unless noted.
 
 | Implementation / mode | Throughput |
 |---|---:|
@@ -133,7 +133,7 @@ Stream throughput is usable for external batteries; hash throughput is still the
 | `tricube_tc256_xof_fast` stream candidate | ~80.2 MiB/s |
 | `tricube_geo256_chain_fast` stream candidate | ~62.3 MiB/s |
 | `tricube_tetra_block256_chain_fast` stream candidate | ~57.3 MiB/s |
-| Current standalone C TriCube stream | ~51.5 MiB/s in refresh run; ~53.1 MiB/s in local package smoke run |
+| Current standalone C TriCube stream | ~51.5 MiB/s in refresh run; ~53.1 MiB/s in package smoke run |
 | `sha256_counter_chain` Python harness control | ~51.3 MiB/s |
 | Current standalone C TriCube hash, 1024-byte messages, 16 rounds | ~14.7 MiB/s |
 
@@ -141,7 +141,7 @@ These numbers are not a claim of competitiveness with optimized SHA-2, SHA-3, BL
 
 ### Interpretation
 
-TriCube has moved past a sketch: it has a concrete geometric state model, a C implementation, a Python interface, fixed vectors, battery results, structural probes, and reproducible commands. The strongest positive evidence is the TestU01 Crush pass, the Dieharder result with no failures, the absence of obvious structural failures in the current probes, and the fact that the C stream path is fast enough for longer batteries.
+TriCube now has a concrete geometric state model, a C implementation, a Python interface, fixed vectors, battery results, structural probes, and reproducible commands. The strongest positive evidence is the TestU01 Crush pass, the Dieharder result with no failures, the absence of obvious structural failures in the current probes, and the fact that the C stream path is fast enough for longer batteries.
 
 The strongest negative evidence is also clear: PractRand flagged low-bit behavior, cryptanalysis is incomplete, and hash throughput is not yet competitive. The responsible conclusion is that TriCube deserves further review and hardening, not security use.
 
@@ -149,7 +149,7 @@ The full public evidence summary is [results/consolidated-results-2026-05-19.md]
 
 ## Reproducing Results
 
-Quick local checks:
+Quick checks:
 
 ```bash
 make -C c test
@@ -194,7 +194,7 @@ See [docs/security-status.md](docs/security-status.md) and [docs/limitations.md]
 
 ## Paper and Citation
 
-The manuscript draft is in [paper/](paper/). It explains where TriCube came from, the current construction, the available evidence, and the analysis still required before stronger claims would be responsible.
+The manuscript is in [paper/](paper/). It explains where TriCube came from, the current construction, the available evidence, and the analysis still required before stronger claims would be responsible.
 
 If you use this repository in research, cite [CITATION.cff](CITATION.cff).
 

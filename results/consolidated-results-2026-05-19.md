@@ -96,7 +96,7 @@ These probes are development gates. They can find obvious problems, but they do 
 | `tricube_tc256_xof_fast` | 80.158 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
 | `tricube_geo256_chain_fast` | 62.255 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
 | `tricube_tetra_block256_chain_fast` | 57.276 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
-| Current standalone C TriCube stream | 51.513 MiB/s | 1 MiB refresh run; local package smoke measured 53.147 MiB/s. |
+| Current standalone C TriCube stream | 51.513 MiB/s | 1 MiB refresh run; package smoke measured 53.147 MiB/s. |
 | `sha256_counter_chain` harness control | 51.307 MiB/s | Python harness control, not an optimized C SHA comparison. |
 
 ### Hash Throughput

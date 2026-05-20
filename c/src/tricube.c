@@ -3,8 +3,8 @@
  *
  * This file contains the standalone C implementation of the TriCube core.
  * The construction is experimental and is not validated for security-critical
- * use. Some internal domain tags are retained from the May 2026 research
- * prototype so published test vectors and result artifacts remain reproducible.
+ * use. Some domain tags are retained from the May 2026 research prototype so
+ * published test vectors and result artifacts remain reproducible.
  */
 
 #include <errno.h>

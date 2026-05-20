@@ -55,11 +55,11 @@ Digest mode emits 32 bytes. XOF mode emits an arbitrary number of bytes by conti
 The default stream path is the released baseline. The C API also exposes an
 experimental `fast8x` stream variant for continued testing. `fast8x` is
 domain-separated from the baseline, uses fewer rounds in the stream update path,
-widens the stream extraction rate, and adds an internal xmix output layer. It
+widens the stream extraction rate, and adds an xmix output layer. It
 does not change digest mode, XOF mode, fixed vectors, or the default stream
 behavior.
 
-The construction uses domain separation strings internally so hash, XOF, and stream behavior do not share the same state initialization path. Some internal domain strings retain earlier prototype labels so the May 2026 test vectors remain reproducible. The public project name is TriCube.
+The construction uses domain separation strings so hash, XOF, and stream behavior do not share the same state initialization path. Some implementation domain strings retain earlier prototype labels so the May 2026 test vectors remain reproducible. The public project name is TriCube.
 
 ## What Is Not Claimed
 
