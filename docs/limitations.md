@@ -22,9 +22,18 @@ TriCube is not ready for security use. The current project should be treated as 
 ## Research Limitations
 
 - Reduced-round attacks are incomplete.
-- Differential and rotational analysis are incomplete.
+- Formal differential trail analysis is incomplete.
+- Formal rotational-distinguisher analysis is incomplete.
 - Algebraic structure analysis is incomplete.
 - Birthday collision experiments are small relative to cryptographic claims.
 - Long multi-seed PractRand, TestU01 Crush reruns, TestU01 BigCrush, larger NIST STS, and SmokeRand full campaigns remain open.
+
+## Terminology Correction
+
+Earlier project notes used phrases such as differential probes, rotational
+probes, and algebraic screens. These are intentionally named probes/screens
+because they are not formal cryptanalysis. They are black-box development
+checks intended to find obvious failures before deeper analysis. Formal
+differential, rotational, and algebraic cryptanalysis remains future work.
 
 These limitations are intentional in the public documentation. They prevent the project from implying a stronger security status than the evidence supports.

@@ -10,6 +10,12 @@ The repository contains a standalone C11 implementation, a Python reference pack
 
 The strongest current result is that TriCube now has a concrete geometric construction with reproducible C/Python vectors and nontrivial statistical-battery evidence. The main open issues are low-bit PractRand warnings, incomplete cryptanalysis, and performance that is still below mature optimized hash implementations.
 
+## Specification and Security Boundary
+
+The primitive is specified in [docs/specification.md](docs/specification.md). That document gives the public baseline state size, lane layout, tetrahedral decomposition, round transformation, modes, padding, length encoding, domain tags, and test vectors.
+
+The security boundary is in [docs/security-status.md](docs/security-status.md). TriCube has black-box development probes and statistical-battery results, but it does not have formal differential, rotational, algebraic, or reduced-round cryptanalysis. The terms used in this repository are deliberately narrow: a probe or screen is an engineering check for obvious failures, not a security proof.
+
 ## Quick Start
 
 Build and test the C implementation:
@@ -85,7 +91,7 @@ Input bytes are absorbed with domain separation and length encoding. Digest mode
 
 The candidate novelty is the cube/tetrahedral state evolution and propagation schedule. It is not the use of hashing, XOFs, ARX operations, or sponge-like absorb/squeeze structure, all of which are established design families.
 
-See [docs/design.md](docs/design.md) for the construction details.
+See [docs/specification.md](docs/specification.md) for the exact construction and [docs/design.md](docs/design.md) for a shorter design overview.
 
 ## Main Results
 
@@ -116,11 +122,13 @@ domain-separated from the baseline and must be requested explicitly with
 | Truncated birthday collision checks | PASS | 16/24/32/48/64-bit prefix collision counts were close to birthday expectation under practical sample sizes. |
 | Full-digest collision smoke | PASS | 0 full digest collisions and 0 prefix64 collisions over 20,000 sampled messages. |
 | Message-bit diffusion | PASS | 16-round mean changed bits: 127.819 of 256 over 8,192 samples. |
-| Differential probes | PASS | Across tested deltas and rounds, mean changed bits stayed near 128; no repeated output differences were observed. |
-| Rotational probes | PASS | No exact rotational relation was observed; mean rotational distances stayed near 128 bits. |
+| Black-box differential probe | PASS | Across tested deltas and rounds, mean changed bits stayed near 128; no repeated output differences were observed. |
+| Black-box rotational probe | PASS | No exact rotational relation was observed; mean rotational distances stayed near 128 bits. |
 | Domain/tweak separation | PASS | 5/5 unique digests; minimum hamming distance from default case was 121 bits. |
 | State-recovery screen | PASS | Next-byte prediction accuracy 0.00396061, near the random baseline of 1/256. |
 | Overlap/fork stream test | PASS | 0 repeated 32-byte block overlaps across 4 streams and 262,144 tested blocks. |
+
+These probes are development gates. They do not search differential trails, bound differential probabilities, prove resistance to rotational distinguishers, perform SAT/MILP or Gröbner-basis analysis, or prove state-recovery resistance. See [docs/testing.md](docs/testing.md) for the exact meaning of each probe.
 
 ### Throughput
 
@@ -184,7 +192,7 @@ TriCube is not secure for production use. The limitations are direct:
 - no security proof;
 - no independent cryptanalysis;
 - no collision-resistance or preimage-resistance claim;
-- incomplete reduced-round, differential, rotational, algebraic, and state-recovery analysis;
+- incomplete formal reduced-round, differential, rotational, algebraic, and state-recovery analysis;
 - unresolved low-bit PractRand warnings;
 - no side-channel or constant-time review;
 - performance is not competitive with mature optimized hashes;

@@ -6,6 +6,12 @@ SHA-2 is standardized in NIST FIPS 180-4. SHA-3 and SHAKE are standardized in NI
 
 TriCube also resembles sponge and ARX systems in broad structure: it absorbs input, permutes state, and squeezes output using addition, xor, and rotation operations. Those ingredients are not novel by themselves.
 
+Ascon is useful here as a documentation model, not as a maturity comparison.
+NIST SP 800-232 specifies the Ascon family by first defining the permutation,
+state representation, constants, rates, padding, and modes. TriCube's
+specification follows that style for clarity, but TriCube is not standardized
+and has not received comparable public cryptanalytic review.
+
 ## What May Be Distinctive
 
 The part worth studying is the state topology:
@@ -22,6 +28,8 @@ That structure may or may not survive cryptanalytic review. The repository keeps
 
 - NIST FIPS 180-4, Secure Hash Standard: https://csrc.nist.gov/pubs/fips/180-4/upd1/final
 - NIST FIPS 202, SHA-3 Standard: https://csrc.nist.gov/pubs/fips/202/final
+- NIST SP 800-232, Ascon-Based Lightweight Cryptography Standards for Constrained Devices: https://doi.org/10.6028/NIST.SP.800-232
+- Ascon v1.2, Journal of Cryptology: https://doi.org/10.1007/s00145-021-09398-9
 - BLAKE2: https://www.blake2.net/
 - BLAKE3 implementation and specification links: https://github.com/BLAKE3-team/BLAKE3
 - Keccak Team: https://keccak.team/
@@ -29,4 +37,3 @@ That structure may or may not survive cryptanalytic review. The repository keeps
 - CubeHash reference material: https://ehash.isec.tugraz.at/wiki/CubeHash.html
 
 The comparison status is incomplete until TriCube has a full benchmark set against optimized C implementations and independent cryptanalysis against the reduced-round and full-round construction.
-

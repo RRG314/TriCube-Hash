@@ -22,16 +22,21 @@ The current public repository includes:
 
 The PractRand 1 GiB evaluation reached the final level with no anomalies in 2050 final-level results, but earlier levels flagged suspicious or unusual low-bit behavior. That result is classified as WARN.
 
+The structural probes in the result summary are black-box development screens.
+They are useful for finding obvious diffusion, rotation, overlap, and prediction
+failures. They are not formal differential cryptanalysis, formal rotational
+cryptanalysis, algebraic cryptanalysis, or state-recovery proofs.
+
 ## Unknowns
 
 The following work has not been completed:
 
 - independent cryptanalysis;
 - reduced-round attack study;
-- differential trail analysis;
-- rotational symmetry analysis;
-- algebraic degree and invariant analysis;
-- state-recovery attempts;
+- formal differential trail analysis;
+- formal rotational-distinguisher analysis;
+- algebraic degree and invariant analysis at useful scale;
+- state-recovery attack attempts;
 - collision and near-collision search at meaningful scales;
 - domain-separation review;
 - multi-seed long-run PractRand, TestU01 Crush reruns, and TestU01 BigCrush campaigns;

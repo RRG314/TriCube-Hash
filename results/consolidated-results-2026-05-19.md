@@ -75,15 +75,19 @@ This is a WARN result. It should drive follow-up testing, not be treated as a cl
 | Full digest collision smoke | PASS | 0 full digest collisions and 0 prefix64 collisions over 20,000 sampled messages. |
 | Diffusion, 12 rounds | PASS | Mean changed bits 128.027 of 256; stdev 7.981; min 99; max 156. |
 | Diffusion, 16 rounds | PASS | Mean changed bits 127.819 of 256; stdev 7.950; min 95; max 152. |
-| Differential probes | PASS | Tested deltas across 1, 2, 4, 8, 12, and 16 rounds; no repeated output differences observed. |
-| Rotational probes | PASS | Tested rotations 1, 7, 8, 13, 16, and 32 across 1, 2, 4, 8, 12, and 16 rounds; mean rotational distances stayed near 128 bits. |
-| Algebraic probe | PASS | Small black-box ANF probe reached max degree 10 for sampled 10-variable cases across tested rounds. |
+| Black-box differential probe | PASS | Tested deltas across 1, 2, 4, 8, 12, and 16 rounds; no repeated output differences observed. |
+| Black-box rotational probe | PASS | Tested rotations 1, 7, 8, 13, 16, and 32 across 1, 2, 4, 8, 12, and 16 rounds; mean rotational distances stayed near 128 bits. |
+| Small black-box algebraic screen | PASS | Sampled ANF screen reached max degree 10 for sampled 10-variable cases across tested rounds. |
 | Domain/tweak separation | PASS | 5 unique digests; minimum hamming distance from default case was 121 bits. |
 | Bit influence spread | PASS | Mean output flip rate 0.5009918; min 0.425781; max 0.570312. |
 | State-recovery screen | PASS | Next-byte prediction accuracy 0.00396061; bit accuracy 0.500095; linear-complexity ratio 0.5. |
 | Related-seed overlap/fork test | PASS | 0 repeated 32-byte block overlaps across 4 streams and 262,144 tested blocks. |
 
-These probes are development gates. They can find obvious problems, but they do not replace cryptanalysis.
+These probes are development gates. They can find obvious problems, but they do
+not replace cryptanalysis. The black-box differential probe does not search
+trails or bound differential probability. The rotational probe does not prove
+resistance to rotational distinguishers. The algebraic screen does not perform
+SAT, MILP, Gröbner-basis, full ANF, or invariant analysis.
 
 ## Performance
 
@@ -118,15 +122,14 @@ Hash throughput is the main engineering weakness. The current C implementation i
 
 The strongest positive evidence is the TestU01 Crush pass, the Dieharder battery with no failures, the NIST STS pass, the absence of obvious failures in the structural probes, and enough C stream throughput to run longer external batteries.
 
-The strongest negative evidence is the PractRand low-bit warning. That issue needs multi-seed, low-bit-focused, and longer-run follow-up. TriCube also still lacks independent cryptanalysis, reduced-round attacks, differential trail work, rotational analysis, algebraic analysis at larger scale, side-channel review, and competitive optimized implementations.
+The strongest negative evidence is the PractRand low-bit warning. That issue needs multi-seed, low-bit-focused, and longer-run follow-up. TriCube also still lacks independent cryptanalysis, reduced-round attacks, formal differential trail work, formal rotational-distinguisher analysis, algebraic analysis at larger scale, side-channel review, and competitive optimized implementations.
 
 The correct public claim is narrow:
 
 > TriCube is an experimental geometric hash/XOF candidate with a concrete C implementation, reproducible vectors, meaningful early statistical-battery evidence, and unresolved cryptanalytic questions.
 
-The wrong public claim is:
-
-> TriCube is cryptographically secure.
+An unsupported public claim would be that the current evidence establishes
+security. It does not.
 
 ## Required Next Tests
 
@@ -136,7 +139,7 @@ The wrong public claim is:
 - SmokeRand full battery;
 - low-bit-focused diagnosis of the stream path;
 - reduced-round attack search;
-- differential and rotational cryptanalysis;
+- formal differential and rotational cryptanalysis;
 - algebraic and invariant analysis;
 - birthday and near-collision sweeps at larger practical scales;
 - optimized C throughput comparison against SHA-256, SHA3/SHAKE, BLAKE2, and BLAKE3 libraries.
