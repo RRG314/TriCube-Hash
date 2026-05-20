@@ -55,6 +55,10 @@ unchanged. Users must explicitly request the variant:
 c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin --variant fast8x
 ```
 
+For source navigation, the named C entry points are in
+`c/src/tricube_fast8x.c`. The shared permutation, state schedule, and `fast8x`
+stream profile remain in `c/src/tricube.c`.
+
 ## Rejected high-speed variants
 
 Several faster variants were tested but not promoted:

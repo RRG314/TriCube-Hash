@@ -49,6 +49,7 @@ int main(void) {
     tricube_stream_variant parsed;
     uint8_t baseline[256];
     uint8_t fast8x[256];
+    uint8_t fast8x_named[256];
 
     failures += expect_deterministic(TRICUBE_STREAM_BASELINE, "baseline");
     failures += expect_deterministic(TRICUBE_STREAM_FAST8X, "fast8x");
@@ -72,7 +73,12 @@ int main(void) {
 
     tricube_stream_seed_variant(123, baseline, sizeof(baseline), TRICUBE_STREAM_BASELINE);
     tricube_stream_seed_variant(123, fast8x, sizeof(fast8x), TRICUBE_STREAM_FAST8X);
+    tricube_fast8x_stream_seed(123, fast8x_named, sizeof(fast8x_named));
     failures += expect_distinct("fast8x vs baseline", fast8x, baseline, sizeof(fast8x));
+    if (memcmp(fast8x, fast8x_named, sizeof(fast8x)) != 0) {
+        fprintf(stderr, "named fast8x entry point differs from stream variant\n");
+        failures++;
+    }
 
     return failures ? 1 : 0;
 }

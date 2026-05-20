@@ -55,6 +55,11 @@ int tricube_stream_write_variant(FILE *out, uint64_t seed, uint64_t n_bytes, tri
 int tricube_stream_write_unbounded(FILE *out, uint64_t seed, tricube_stream_variant variant);
 const char *tricube_stream_variant_name(tricube_stream_variant variant);
 int tricube_stream_variant_from_name(const char *name, tricube_stream_variant *variant);
+
+int tricube_fast8x_stream_seed(uint64_t seed, uint8_t *out, size_t n_bytes);
+int tricube_fast8x_stream_write(FILE *out, uint64_t seed, uint64_t n_bytes);
+int tricube_fast8x_stream_write_unbounded(FILE *out, uint64_t seed);
+
 int tricube_self_test(void);
 
 #ifdef __cplusplus

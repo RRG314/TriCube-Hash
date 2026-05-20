@@ -63,6 +63,11 @@ c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin --variant fas
 
 The public C header is [c/include/tricube.h](c/include/tricube.h). It exposes fixed 256-bit digest mode, XOF mode, context-style update/finalize/squeeze functions, deterministic stream generation, and self-test support.
 
+The experimental `fast8x` stream entry points are kept visible in
+[c/src/tricube_fast8x.c](c/src/tricube_fast8x.c). The shared permutation and
+variant profile live in [c/src/tricube.c](c/src/tricube.c), so `fast8x` remains
+one named TriCube stream variant rather than a forked second implementation.
+
 The Python CLI is available after installation:
 
 ```bash
