@@ -52,9 +52,15 @@ TriCube absorbs message blocks into selected lanes, applies partial permutation 
 
 Digest mode emits 32 bytes. XOF mode emits an arbitrary number of bytes by continuing the squeeze schedule. Stream mode initializes from a seed and emits deterministic stream bytes for statistical testing.
 
+The default stream path is the released baseline. The C API also exposes an
+experimental `fast8x` stream variant for continued testing. `fast8x` is
+domain-separated from the baseline, uses fewer rounds in the stream update path,
+widens the stream extraction rate, and adds an internal xmix output layer. It
+does not change digest mode, XOF mode, fixed vectors, or the default stream
+behavior.
+
 The construction uses domain separation strings internally so hash, XOF, and stream behavior do not share the same state initialization path. Some internal domain strings retain earlier prototype labels so the May 2026 test vectors remain reproducible. The public project name is TriCube.
 
 ## What Is Not Claimed
 
 TriCube is not a standardized sponge construction, not a proven permutation, not a keyed MAC, and not a validated random bit generator. The current design is a candidate that needs external review and stronger analysis before it can responsibly make cryptographic claims.
-

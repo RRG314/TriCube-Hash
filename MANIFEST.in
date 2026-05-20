@@ -1,5 +1,6 @@
 include python/README.md
 include LICENSE
+include THIRD_PARTY_NOTICES.md
 include CITATION.cff
 include CHANGELOG.md
 include SECURITY.md
@@ -14,6 +15,7 @@ prune results/raw
 prune benchmarks
 prune tools
 prune examples
+prune experiments
 prune c
 exclude CONTRIBUTING.md
 exclude README.md

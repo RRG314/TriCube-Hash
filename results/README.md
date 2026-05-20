@@ -7,4 +7,9 @@ This directory contains concise public-facing result summaries, not raw archive 
 - `raw/practrand-1gb-summary-2026-05-19.md` summarizes the most important external-battery warning.
 - `raw/practrand-1gb-stdout-2026-05-19.txt` preserves the corresponding PractRand output log.
 
+The fast8x stream optimization is documented under
+`experiments/ablation-lab/` rather than as a new raw-results dump. That record
+explains why `fast8x` was added as an explicit experimental stream variant and
+why faster low-bit-warning variants were not promoted.
+
 Large external-battery logs should normally be attached to releases or stored outside the main repository unless they are small enough and important enough to inspect directly.

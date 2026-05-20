@@ -8,6 +8,7 @@ LIB_OBJ := $(BUILD_DIR)/tricube.o
 CLI_OBJ := $(BUILD_DIR)/tricube_cli.o
 TEST_VECTOR_OBJ := $(BUILD_DIR)/test_vectors.o
 TEST_STREAM_OBJ := $(BUILD_DIR)/test_stream.o
+TEST_STREAM_VARIANTS_OBJ := $(BUILD_DIR)/test_stream_variants.o
 
 .PHONY: all clean test
 
@@ -31,16 +32,23 @@ $(TEST_VECTOR_OBJ): tests/test_vectors.c include/tricube.h | $(BUILD_DIR)
 $(TEST_STREAM_OBJ): tests/test_stream.c include/tricube.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDE) -c tests/test_stream.c -o $@
 
+$(TEST_STREAM_VARIANTS_OBJ): tests/test_stream_variants.c include/tricube.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(INCLUDE) -c tests/test_stream_variants.c -o $@
+
 $(BUILD_DIR)/test_vectors: $(LIB_OBJ) $(TEST_VECTOR_OBJ)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 $(BUILD_DIR)/test_stream: $(LIB_OBJ) $(TEST_STREAM_OBJ)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-test: $(BUILD_DIR)/tricube $(BUILD_DIR)/test_vectors $(BUILD_DIR)/test_stream
+$(BUILD_DIR)/test_stream_variants: $(LIB_OBJ) $(TEST_STREAM_VARIANTS_OBJ)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+test: $(BUILD_DIR)/tricube $(BUILD_DIR)/test_vectors $(BUILD_DIR)/test_stream $(BUILD_DIR)/test_stream_variants
 	$(BUILD_DIR)/tricube self-test
 	$(BUILD_DIR)/test_vectors
 	$(BUILD_DIR)/test_stream
+	$(BUILD_DIR)/test_stream_variants
 
 clean:
 	rm -rf $(BUILD_DIR)

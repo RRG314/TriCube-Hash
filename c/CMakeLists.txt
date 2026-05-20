@@ -17,7 +17,11 @@ target_link_libraries(test_vectors PRIVATE tricube_core)
 add_executable(test_stream tests/test_stream.c)
 target_link_libraries(test_stream PRIVATE tricube_core)
 
+add_executable(test_stream_variants tests/test_stream_variants.c)
+target_link_libraries(test_stream_variants PRIVATE tricube_core)
+
 enable_testing()
 add_test(NAME tricube_self_test COMMAND tricube self-test)
 add_test(NAME tricube_vectors COMMAND test_vectors)
 add_test(NAME tricube_stream COMMAND test_stream)
+add_test(NAME tricube_stream_variants COMMAND test_stream_variants)

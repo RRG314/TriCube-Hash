@@ -19,6 +19,10 @@ Optional external tools:
 - NIST STS;
 - SmokeRand.
 
+These tools are not bundled in the TriCube repository or PyPI package. Install
+them separately and follow their upstream licenses. See
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for the public notice table.
+
 ## Rebuild
 
 ```bash
@@ -49,8 +53,13 @@ The C and Python implementations should agree on the fixed vectors.
 ```bash
 python benchmarks/bench_hash_sizes.py --quick
 python benchmarks/bench_throughput.py --quick
-python benchmarks/bench_stream.py --bytes 1048576
+python benchmarks/bench_stream.py --bytes 1048576 --variants baseline,fast8x
+python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x --skip-python
 ```
+
+The `fast8x` stream variant is an experimental optimized path. It is not the
+default and does not replace the baseline stream. The ablation record explaining
+why it was added is in [experiments/ablation-lab/](../experiments/ablation-lab/).
 
 ## External Batteries
 

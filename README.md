@@ -58,6 +58,7 @@ c/build/tricube hash --hex 616263
 c/build/tricube hash path/to/file.bin
 c/build/tricube xof --hex 616263 --bytes 64
 c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin
+c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin --variant fast8x
 ```
 
 The public C header is [c/include/tricube.h](c/include/tricube.h). It exposes fixed 256-bit digest mode, XOF mode, context-style update/finalize/squeeze functions, deterministic stream generation, and self-test support.
@@ -84,6 +85,12 @@ See [docs/design.md](docs/design.md) for the construction details.
 ## Main Results
 
 The following tables summarize the May 2026 validation evidence. These are engineering and statistical-screening results, not security proofs.
+
+The default stream path remains the released baseline. This branch also adds an
+experimental `fast8x` stream variant for external statistical testing. It is
+domain-separated from the baseline and must be requested explicitly with
+`--variant fast8x`. The ablation evidence for that choice is summarized in
+[experiments/ablation-lab/](experiments/ablation-lab/).
 
 ### Statistical Batteries
 
@@ -116,6 +123,8 @@ Stream throughput is usable for external batteries; hash throughput is still the
 
 | Implementation / mode | Throughput |
 |---|---:|
+| Experimental C `fast8x` stream variant | ~132.7 MiB/s |
+| Released C baseline stream in the same ablation harness | ~69.8 MiB/s |
 | `tricube_tc256_xof_fast` stream candidate | ~80.2 MiB/s |
 | `tricube_geo256_chain_fast` stream candidate | ~62.3 MiB/s |
 | `tricube_tetra_block256_chain_fast` stream candidate | ~57.3 MiB/s |
@@ -151,9 +160,17 @@ make -C c all
 tools/run_practrand.sh 1073741824
 tools/run_dieharder.sh 1073741824
 tools/run_testu01.sh smallcrush 1073741824
+python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x --skip-python
 ```
 
 See [tools/run_stat_batteries.md](tools/run_stat_batteries.md), [docs/testing.md](docs/testing.md), and [docs/reproducibility.md](docs/reproducibility.md) before interpreting results.
+
+## Third-Party Tools
+
+TriCube does not bundle SmokeRand, PractRand, Dieharder, TestU01, NIST STS, or
+third-party hash implementations. The scripts in `tools/` assume those
+programs are installed separately and used under their own upstream licenses.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the public notice table.
 
 ## Security Limitations
 

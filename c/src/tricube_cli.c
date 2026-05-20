@@ -14,8 +14,9 @@ static void usage(const char *argv0) {
             "  %s hash <file>\n"
             "  %s hash --hex HEX\n"
             "  %s xof --hex HEX --bytes N\n"
-            "  %s stream --seed N --bytes N --out FILE\n",
-            argv0, argv0, argv0, argv0, argv0, argv0);
+            "  %s stream --seed N --bytes N --out FILE [--variant baseline|fast8x]\n"
+            "  %s stream --seed N --unbounded --out - [--variant baseline|fast8x]\n",
+            argv0, argv0, argv0, argv0, argv0, argv0, argv0);
 }
 
 static uint64_t parse_u64(const char *value, const char *name) {
@@ -167,6 +168,8 @@ static int cmd_stream(int argc, char **argv) {
     uint64_t seed = 0;
     uint64_t n_bytes = 0;
     const char *out_path = NULL;
+    int unbounded = 0;
+    tricube_stream_variant variant = TRICUBE_STREAM_BASELINE;
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--seed") == 0 && i + 1 < argc) {
             seed = parse_u64(argv[++i], "seed");
@@ -174,11 +177,22 @@ static int cmd_stream(int argc, char **argv) {
             n_bytes = parse_u64(argv[++i], "bytes");
         } else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) {
             out_path = argv[++i];
+        } else if (strcmp(argv[i], "--unbounded") == 0) {
+            unbounded = 1;
+        } else if (strcmp(argv[i], "--variant") == 0 && i + 1 < argc) {
+            if (tricube_stream_variant_from_name(argv[++i], &variant) != TRICUBE_OK) {
+                fprintf(stderr, "invalid stream variant; expected baseline or fast8x\n");
+                return 2;
+            }
         } else {
             return 2;
         }
     }
-    if (n_bytes == 0 || out_path == NULL) {
+    if ((!unbounded && n_bytes == 0) || out_path == NULL) {
+        return 2;
+    }
+    if (unbounded && strcmp(out_path, "-") != 0) {
+        fprintf(stderr, "--unbounded is only allowed with --out -\n");
         return 2;
     }
     FILE *out = strcmp(out_path, "-") == 0 ? stdout : fopen(out_path, "wb");
@@ -186,7 +200,7 @@ static int cmd_stream(int argc, char **argv) {
         perror(out_path);
         return 2;
     }
-    int rc = tricube_stream_write(out, seed, n_bytes);
+    int rc = unbounded ? tricube_stream_write_unbounded(out, seed, variant) : tricube_stream_write_variant(out, seed, n_bytes, variant);
     if (out != stdout) {
         fclose(out);
     }

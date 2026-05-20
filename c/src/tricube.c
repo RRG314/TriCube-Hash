@@ -26,11 +26,53 @@
 #define TC_RC_WORDS (32 * 24)
 #define TC_TETRA_COUNT (8 * 6)
 #define TC_EDGE_COUNT 54
+#define TC_SCHEDULE_ROUNDS 24
+
+typedef struct tetra_op {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+    uint8_t r0;
+    uint8_t r1;
+    uint8_t r2;
+    uint8_t r3;
+    uint64_t rc0;
+    uint64_t rc1;
+    uint64_t rc2;
+    uint64_t rc3;
+} tetra_op;
+
+typedef struct edge_op {
+    uint8_t a;
+    uint8_t b;
+    uint8_t r0;
+    uint8_t r1;
+    uint64_t rc;
+} edge_op;
+
+typedef struct shell_op {
+    uint8_t lane;
+    uint8_t vertex;
+    uint8_t opposite;
+    uint8_t rot;
+    uint64_t rc;
+} shell_op;
+
+typedef struct perm_op {
+    uint8_t src;
+    uint8_t rot;
+    uint64_t rc;
+} perm_op;
 
 static uint64_t ROUND_CONSTANTS[TC_RC_WORDS];
 static uint64_t IV[TC_STATE_WORDS];
 static uint8_t TETRAHEDRA[TC_TETRA_COUNT][4];
 static uint8_t EDGES[TC_EDGE_COUNT][2];
+static tetra_op TETRA_OPS[TC_SCHEDULE_ROUNDS][TC_TETRA_COUNT];
+static edge_op EDGE_OPS[TC_SCHEDULE_ROUNDS][TC_EDGE_COUNT];
+static shell_op SHELL_OPS[TC_SCHEDULE_ROUNDS][5];
+static perm_op PERM_OPS[TC_SCHEDULE_ROUNDS][TC_STATE_WORDS];
 static bool TABLES_READY = false;
 static uint64_t DEFAULT_HASH32_STATE[TC_STATE_WORDS];
 static bool DEFAULT_HASH32_STATE_READY = false;
@@ -136,6 +178,59 @@ static void init_tables(void) {
             }
         }
     }
+
+    for (int rnd = 0; rnd < TC_SCHEDULE_ROUNDS; rnd++) {
+        for (size_t tet_index = 0; tet_index < TC_TETRA_COUNT; tet_index++) {
+            uint8_t a = TETRAHEDRA[tet_index][0];
+            uint8_t b = TETRAHEDRA[tet_index][1];
+            uint8_t c = TETRAHEDRA[tet_index][2];
+            uint8_t d = TETRAHEDRA[tet_index][3];
+            if ((rnd + (int)tet_index) & 1) {
+                uint8_t tmp = b;
+                b = d;
+                d = tmp;
+            }
+            if ((rnd + (int)tet_index) & 2) {
+                uint8_t tmp = a;
+                a = c;
+                c = tmp;
+            }
+            size_t base = ((size_t)rnd * 32U + tet_index) % TC_RC_WORDS;
+            const uint8_t *rots = ROTATION_SETS[(rnd + (int)tet_index) & 3];
+            TETRA_OPS[rnd][tet_index].a = a;
+            TETRA_OPS[rnd][tet_index].b = b;
+            TETRA_OPS[rnd][tet_index].c = c;
+            TETRA_OPS[rnd][tet_index].d = d;
+            TETRA_OPS[rnd][tet_index].r0 = rots[0];
+            TETRA_OPS[rnd][tet_index].r1 = rots[1];
+            TETRA_OPS[rnd][tet_index].r2 = rots[2];
+            TETRA_OPS[rnd][tet_index].r3 = rots[3];
+            TETRA_OPS[rnd][tet_index].rc0 = ROUND_CONSTANTS[base];
+            TETRA_OPS[rnd][tet_index].rc1 = ROUND_CONSTANTS[(base + 7U) % TC_RC_WORDS];
+            TETRA_OPS[rnd][tet_index].rc2 = ROUND_CONSTANTS[(base + 13U) % TC_RC_WORDS];
+            TETRA_OPS[rnd][tet_index].rc3 = ROUND_CONSTANTS[(base + 21U) % TC_RC_WORDS];
+        }
+        for (size_t edge_index = 0; edge_index < TC_EDGE_COUNT; edge_index++) {
+            EDGE_OPS[rnd][edge_index].a = EDGES[edge_index][0];
+            EDGE_OPS[rnd][edge_index].b = EDGES[edge_index][1];
+            EDGE_OPS[rnd][edge_index].rc = ROUND_CONSTANTS[((size_t)rnd * 37U + edge_index * 5U) % TC_RC_WORDS];
+            EDGE_OPS[rnd][edge_index].r0 = (uint8_t)((edge_index + (size_t)rnd * 3U) % 61U + 1U);
+            EDGE_OPS[rnd][edge_index].r1 = (uint8_t)((edge_index * 7U + (size_t)rnd) % 61U + 1U);
+        }
+        for (size_t j = 0; j < 5; j++) {
+            uint8_t vertex = (uint8_t)(((size_t)rnd * 5U + j * 7U) % 27U);
+            SHELL_OPS[rnd][j].lane = SHELL_LANES[j];
+            SHELL_OPS[rnd][j].vertex = vertex;
+            SHELL_OPS[rnd][j].opposite = (uint8_t)((vertex * 11U + 3U) % 27U);
+            SHELL_OPS[rnd][j].rc = ROUND_CONSTANTS[((size_t)rnd * 11U + j * 17U) % TC_RC_WORDS];
+            SHELL_OPS[rnd][j].rot = (uint8_t)(((size_t)rnd + j * 9U) % 61U + 1U);
+        }
+        for (size_t i = 0; i < TC_STATE_WORDS; i++) {
+            PERM_OPS[rnd][i].src = (uint8_t)((i * 9U + 5U) & 31U);
+            PERM_OPS[rnd][i].rc = ROUND_CONSTANTS[((size_t)rnd * 32U + i) % TC_RC_WORDS] + i + (uint64_t)rnd;
+            PERM_OPS[rnd][i].rot = (uint8_t)((i * 5U + (size_t)rnd) % 61U + 1U);
+        }
+    }
     TABLES_READY = true;
 }
 
@@ -154,6 +249,19 @@ static void write_le64(uint8_t *out, uint64_t value) {
     for (size_t i = 0; i < 8; i++) {
         out[i] = (uint8_t)((value >> (8U * i)) & 0xffU);
     }
+}
+
+static inline void emit_le64(uint8_t *out, size_t *pos, size_t n_bytes, uint64_t value) {
+    size_t p = *pos;
+    if (p + 8U <= n_bytes) {
+        write_le64(out + p, value);
+        *pos = p + 8U;
+        return;
+    }
+    for (size_t k = 0; k < 8U && p < n_bytes; k++) {
+        out[p++] = (uint8_t)((value >> (8U * k)) & 0xffU);
+    }
+    *pos = p;
 }
 
 static void write_le_u64_to_buf(uint8_t *out, uint64_t value) {
@@ -185,86 +293,49 @@ static void absorb_bytes(uint64_t state[TC_STATE_WORDS], const uint8_t *data, si
     absorb_words(state, words, 8, block_index);
 }
 
-static void mix_tetra64(uint64_t state[TC_STATE_WORDS], const uint8_t tet[4], int rnd, size_t tet_index) {
-    uint8_t a = tet[0];
-    uint8_t b = tet[1];
-    uint8_t c = tet[2];
-    uint8_t d = tet[3];
-    if ((rnd + (int)tet_index) & 1) {
-        uint8_t tmp = b;
-        b = d;
-        d = tmp;
-    }
-    if ((rnd + (int)tet_index) & 2) {
-        uint8_t tmp = a;
-        a = c;
-        c = tmp;
-    }
-    uint64_t x0 = state[a];
-    uint64_t x1 = state[b];
-    uint64_t x2 = state[c];
-    uint64_t x3 = state[d];
-    size_t base = ((size_t)rnd * 32U + tet_index) % TC_RC_WORDS;
-    uint64_t rc0 = ROUND_CONSTANTS[base];
-    uint64_t rc1 = ROUND_CONSTANTS[(base + 7U) % TC_RC_WORDS];
-    uint64_t rc2 = ROUND_CONSTANTS[(base + 13U) % TC_RC_WORDS];
-    uint64_t rc3 = ROUND_CONSTANTS[(base + 21U) % TC_RC_WORDS];
-    const uint8_t *rots = ROTATION_SETS[(rnd + (int)tet_index) & 3];
-
-    x0 += x1 + rc0;
-    x3 = rotl64(x3 ^ x0, rots[0]);
-    x2 += x3 + rc1;
-    x1 = rotl64(x1 ^ x2, rots[1]);
-    x0 += x1 + (rc2 ^ (uint64_t)tet_index);
-    x3 = rotl64(x3 ^ x0, rots[2]);
-    x2 += x3 + (rc3 + (uint64_t)rnd);
-    x1 = rotl64(x1 ^ x2, rots[3]);
-
-    state[a] = x0;
-    state[b] = x1;
-    state[c] = x2;
-    state[d] = x3;
-}
-
-static void edge_couple64(uint64_t state[TC_STATE_WORDS], int rnd) {
-    for (size_t edge_index = 0; edge_index < TC_EDGE_COUNT; edge_index++) {
-        size_t a = EDGES[edge_index][0];
-        size_t b = EDGES[edge_index][1];
-        uint64_t rc = ROUND_CONSTANTS[((size_t)rnd * 37U + edge_index * 5U) % TC_RC_WORDS];
-        uint64_t left = state[a];
-        uint64_t right = state[b];
-        state[a] = left + rotl64(right ^ rc, (unsigned int)((edge_index + (size_t)rnd * 3U) % 61U + 1U));
-        state[b] = right ^ rotl64(state[a] + rc + edge_index, (unsigned int)((edge_index * 7U + (size_t)rnd) % 61U + 1U));
-    }
-}
-
-static void shell_couple64(uint64_t state[TC_STATE_WORDS], int rnd) {
-    for (size_t j = 0; j < 5; j++) {
-        size_t lane = SHELL_LANES[j];
-        size_t vertex = ((size_t)rnd * 5U + j * 7U) % 27U;
-        size_t opposite = (vertex * 11U + 3U) % 27U;
-        uint64_t rc = ROUND_CONSTANTS[((size_t)rnd * 11U + j * 17U) % TC_RC_WORDS];
-        state[lane] += state[vertex] + rc;
-        state[opposite] ^= rotl64(state[lane] ^ state[vertex], (unsigned int)(((size_t)rnd + j * 9U) % 61U + 1U));
-    }
-}
-
 static void permute64(uint64_t state[TC_STATE_WORDS], int rounds) {
     uint64_t tmp[TC_STATE_WORDS];
     for (int rnd = 0; rnd < rounds; rnd++) {
+        int srnd = rnd % TC_SCHEDULE_ROUNDS;
         for (size_t tet_index = 0; tet_index < TC_TETRA_COUNT; tet_index++) {
-            mix_tetra64(state, TETRAHEDRA[tet_index], rnd, tet_index);
+            const tetra_op *op = &TETRA_OPS[srnd][tet_index];
+            uint64_t x0 = state[op->a];
+            uint64_t x1 = state[op->b];
+            uint64_t x2 = state[op->c];
+            uint64_t x3 = state[op->d];
+
+            x0 += x1 + op->rc0;
+            x3 = rotl64(x3 ^ x0, op->r0);
+            x2 += x3 + op->rc1;
+            x1 = rotl64(x1 ^ x2, op->r1);
+            x0 += x1 + (op->rc2 ^ (uint64_t)tet_index);
+            x3 = rotl64(x3 ^ x0, op->r2);
+            x2 += x3 + (op->rc3 + (uint64_t)rnd);
+            x1 = rotl64(x1 ^ x2, op->r3);
+
+            state[op->a] = x0;
+            state[op->b] = x1;
+            state[op->c] = x2;
+            state[op->d] = x3;
         }
-        edge_couple64(state, rnd);
-        shell_couple64(state, rnd);
+        for (size_t edge_index = 0; edge_index < TC_EDGE_COUNT; edge_index++) {
+            const edge_op *op = &EDGE_OPS[srnd][edge_index];
+            uint64_t left = state[op->a];
+            uint64_t right = state[op->b];
+            state[op->a] = left + rotl64(right ^ op->rc, op->r0);
+            state[op->b] = right ^ rotl64(state[op->a] + op->rc + edge_index, op->r1);
+        }
+        for (size_t j = 0; j < 5; j++) {
+            const shell_op *op = &SHELL_OPS[srnd][j];
+            state[op->lane] += state[op->vertex] + op->rc;
+            state[op->opposite] ^= rotl64(state[op->lane] ^ state[op->vertex], op->rot);
+        }
         for (size_t i = 0; i < TC_STATE_WORDS; i++) {
-            tmp[i] = state[(i * 9U + 5U) & 31U];
+            tmp[i] = state[PERM_OPS[srnd][i].src];
         }
         memcpy(state, tmp, sizeof(tmp));
-        size_t rc_offset = (size_t)rnd * 32U;
         for (size_t i = 0; i < TC_STATE_WORDS; i++) {
-            state[i] ^= rotl64(ROUND_CONSTANTS[(rc_offset + i) % TC_RC_WORDS] + i + (uint64_t)rnd,
-                               (unsigned int)((i * 5U + (size_t)rnd) % 61U + 1U));
+            state[i] ^= rotl64(PERM_OPS[srnd][i].rc, PERM_OPS[srnd][i].rot);
         }
     }
 }
@@ -333,7 +404,6 @@ static bool use_default_hash32_state(uint64_t state[TC_STATE_WORDS], const uint8
 
 static void squeeze_rate64(uint64_t state[TC_STATE_WORDS], uint64_t counter, uint8_t *out, size_t n_bytes) {
     size_t groups = (n_bytes + 7U) / 8U;
-    uint8_t word_bytes[8];
     size_t pos = 0;
     for (size_t j = 0; j < groups; j++) {
         uint64_t a = state[(j * 5U + (size_t)counter) & 31U];
@@ -343,10 +413,31 @@ static void squeeze_rate64(uint64_t state[TC_STATE_WORDS], uint64_t counter, uin
         uint64_t word = a + rotl64(b ^ ROUND_CONSTANTS[(counter + j) % TC_RC_WORDS],
                                     (unsigned int)((j * 7U + 9U) % 61U + 1U));
         word ^= rotl64(c + d + j + counter, (unsigned int)((j * 13U + 3U) % 61U + 1U));
-        write_le64(word_bytes, word);
-        for (size_t k = 0; k < 8 && pos < n_bytes; k++) {
-            out[pos++] = word_bytes[k];
-        }
+        emit_le64(out, &pos, n_bytes, word);
+    }
+}
+
+static void squeeze_rate64_xmix(uint64_t state[TC_STATE_WORDS], uint64_t counter, uint8_t *out, size_t n_bytes) {
+    size_t groups = (n_bytes + 7U) / 8U;
+    size_t pos = 0;
+    for (size_t j = 0; j < groups; j++) {
+        uint64_t a = state[(j * 5U + (size_t)counter) & 31U];
+        uint64_t b = state[(j * 11U + 7U) & 31U];
+        uint64_t c = state[(j * 17U + 13U) & 31U];
+        uint64_t d = state[(j * 23U + 19U) & 31U];
+        uint64_t e = state[(j * 29U + (size_t)counter * 3U + 3U) & 31U];
+        uint64_t rc0 = ROUND_CONSTANTS[(counter * 13U + j * 17U) % TC_RC_WORDS];
+        uint64_t rc1 = ROUND_CONSTANTS[(counter * 29U + j * 31U + 11U) % TC_RC_WORDS];
+        uint64_t word = a + rotl64(b ^ rc0, (unsigned int)((j * 7U + 9U) % 61U + 1U));
+        word ^= rotl64(c + d + j + counter, (unsigned int)((j * 13U + 3U) % 61U + 1U));
+        word += rotl64(e ^ rc1 ^ (counter + j * UINT64_C(0x9E3779B97F4A7C15)),
+                       (unsigned int)((j * 19U + 17U) % 61U + 1U));
+        word ^= rotl64(word, 23) ^ rotl64(word, 41);
+        word += rotl64(word ^ a ^ d, 17);
+        word ^= (word >> 31) ^ (word >> 47);
+        word += rotl64(word ^ b ^ c ^ rc0, 29);
+        word ^= word >> 33;
+        emit_le64(out, &pos, n_bytes, word);
     }
 }
 
@@ -413,18 +504,95 @@ static void seed_to_tweak(uint64_t seed, uint8_t out[16]) {
     write_le64(out, seed);
 }
 
-static int write_stream(FILE *out, uint64_t seed, uint64_t n_bytes, size_t block_size, int rounds) {
-    static const uint8_t domain[] = "TC-TETRA256-" "V" "2/STREAM";
+typedef struct stream_profile {
+    tricube_stream_variant variant;
+    const char *name;
+    const uint8_t *domain;
+    size_t domain_len;
+    int init_rounds;
+    int step_rounds;
+    size_t rate_bytes;
+    int use_xmix;
+} stream_profile;
+
+static const uint8_t STREAM_DOMAIN_BASELINE[] = "TC-TETRA256-" "V" "2/STREAM";
+static const uint8_t STREAM_DOMAIN_FAST8X[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X";
+
+static const stream_profile STREAM_PROFILES[] = {
+    {TRICUBE_STREAM_BASELINE, "baseline", STREAM_DOMAIN_BASELINE, sizeof(STREAM_DOMAIN_BASELINE) - 1U, 12, 6, TC_RATE_BYTES, 0},
+    {TRICUBE_STREAM_FAST8X, "fast8x", STREAM_DOMAIN_FAST8X, sizeof(STREAM_DOMAIN_FAST8X) - 1U, 8, 4, 256, 1},
+};
+
+static const stream_profile *stream_profile_for_variant(tricube_stream_variant variant) {
+    for (size_t i = 0; i < sizeof(STREAM_PROFILES) / sizeof(STREAM_PROFILES[0]); i++) {
+        if (STREAM_PROFILES[i].variant == variant) {
+            return &STREAM_PROFILES[i];
+        }
+    }
+    return NULL;
+}
+
+const char *tricube_stream_variant_name(tricube_stream_variant variant) {
+    const stream_profile *profile = stream_profile_for_variant(variant);
+    return profile == NULL ? NULL : profile->name;
+}
+
+int tricube_stream_variant_from_name(const char *name, tricube_stream_variant *variant) {
+    if (name == NULL || variant == NULL) {
+        return TRICUBE_ERR_INVALID_ARGUMENT;
+    }
+    if (strcmp(name, "baseline") == 0 || strcmp(name, "default") == 0 || strcmp(name, "released") == 0) {
+        *variant = TRICUBE_STREAM_BASELINE;
+        return TRICUBE_OK;
+    }
+    if (strcmp(name, "fast8x") == 0 || strcmp(name, "rounds8x") == 0 || strcmp(name, "r8x") == 0) {
+        *variant = TRICUBE_STREAM_FAST8X;
+        return TRICUBE_OK;
+    }
+    return TRICUBE_ERR_INVALID_ARGUMENT;
+}
+
+static void stream_init_state(uint64_t state[TC_STATE_WORDS], uint64_t seed, const stream_profile *profile) {
     uint8_t seed_bytes[16];
+    seed_to_tweak(seed, seed_bytes);
+    init_state(state, profile->domain, profile->domain_len, seed_bytes, sizeof(seed_bytes), 64);
+    absorb_bytes(state, seed_bytes, sizeof(seed_bytes), 0);
+    permute64(state, profile->init_rounds);
+}
+
+static void stream_fill_bytes(uint64_t state[TC_STATE_WORDS], uint64_t seed, const stream_profile *profile,
+                              uint64_t *counter, uint8_t *out, size_t n_bytes) {
+    size_t pos = 0;
+    while (pos < n_bytes) {
+        uint64_t words[4] = {
+            *counter,
+            *counter ^ UINT64_C(0x9E3779B97F4A7C15),
+            seed + *counter,
+            seed * UINT64_C(0xD6E8FEB86659FD93) + *counter,
+        };
+        size_t take = n_bytes - pos;
+        if (take > profile->rate_bytes) {
+            take = profile->rate_bytes;
+        }
+        absorb_words(state, words, 4, *counter + 1U);
+        permute64(state, profile->step_rounds);
+        if (profile->use_xmix) {
+            squeeze_rate64_xmix(state, *counter, out + pos, take);
+        } else {
+            squeeze_rate64(state, *counter, out + pos, take);
+        }
+        pos += take;
+        (*counter)++;
+    }
+}
+
+static int write_stream_profile(FILE *out, uint64_t seed, uint64_t n_bytes, size_t block_size, const stream_profile *profile) {
     uint64_t state[TC_STATE_WORDS];
     uint8_t *block = NULL;
     uint64_t counter = 0;
     uint64_t written = 0;
 
-    seed_to_tweak(seed, seed_bytes);
-    init_state(state, domain, sizeof(domain) - 1, seed_bytes, sizeof(seed_bytes), 64);
-    absorb_bytes(state, seed_bytes, sizeof(seed_bytes), 0);
-    permute64(state, rounds);
+    stream_init_state(state, seed, profile);
 
     block = (uint8_t *)malloc(block_size);
     if (block == NULL) {
@@ -433,28 +601,11 @@ static int write_stream(FILE *out, uint64_t seed, uint64_t n_bytes, size_t block
     }
 
     while (written < n_bytes) {
-        size_t pos = 0;
-        while (pos < block_size) {
-            uint64_t words[4] = {
-                counter,
-                counter ^ UINT64_C(0x9E3779B97F4A7C15),
-                seed + counter,
-                seed * UINT64_C(0xD6E8FEB86659FD93) + counter,
-            };
-            size_t take = block_size - pos;
-            if (take > TC_RATE_BYTES) {
-                take = TC_RATE_BYTES;
-            }
-            absorb_words(state, words, 4, counter + 1U);
-            permute64(state, half_rounds(rounds));
-            squeeze_rate64(state, counter, block + pos, take);
-            pos += take;
-            counter++;
-        }
         size_t emit = block_size;
         if ((uint64_t)emit > n_bytes - written) {
             emit = (size_t)(n_bytes - written);
         }
+        stream_fill_bytes(state, seed, profile, &counter, block, emit);
         if (fwrite(block, 1, emit, out) != emit) {
             free(block);
             return 3;
@@ -463,6 +614,39 @@ static int write_stream(FILE *out, uint64_t seed, uint64_t n_bytes, size_t block
     }
     free(block);
     return 0;
+}
+
+static int write_stream_profile_unbounded(FILE *out, uint64_t seed, size_t block_size, const stream_profile *profile) {
+    uint64_t state[TC_STATE_WORDS];
+    uint8_t *block = NULL;
+    uint64_t counter = 0;
+
+    stream_init_state(state, seed, profile);
+
+    block = (uint8_t *)malloc(block_size);
+    if (block == NULL) {
+        fprintf(stderr, "allocation failed for %zu byte block\n", block_size);
+        return 2;
+    }
+
+    while (1) {
+        stream_fill_bytes(state, seed, profile, &counter, block, block_size);
+        if (fwrite(block, 1, block_size, out) != block_size) {
+            free(block);
+            return ferror(out) ? 3 : 0;
+        }
+    }
+}
+
+static int stream_seed_profile(uint64_t seed, uint8_t *out, size_t n_bytes, const stream_profile *profile) {
+    if (n_bytes != 0 && out == NULL) {
+        return TRICUBE_ERR_INVALID_ARGUMENT;
+    }
+    uint64_t state[TC_STATE_WORDS];
+    uint64_t counter = 0;
+    stream_init_state(state, seed, profile);
+    stream_fill_bytes(state, seed, profile, &counter, out, n_bytes);
+    return TRICUBE_OK;
 }
 
 
@@ -490,29 +674,42 @@ int tricube_hash(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGES
 }
 
 int tricube_stream_seed(uint64_t seed, uint8_t *out, size_t n_bytes) {
-    if (n_bytes != 0 && out == NULL) {
+    return tricube_stream_seed_variant(seed, out, n_bytes, TRICUBE_STREAM_BASELINE);
+}
+
+int tricube_stream_seed_variant(uint64_t seed, uint8_t *out, size_t n_bytes, tricube_stream_variant variant) {
+    const stream_profile *profile = stream_profile_for_variant(variant);
+    if (profile == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
-    FILE *fp = tmpfile();
-    if (fp == NULL) {
-        return TRICUBE_ERR_IO;
-    }
-    int rc = write_stream(fp, seed, (uint64_t)n_bytes, 1U << 16, 12);
-    if (rc == 0) {
-        rewind(fp);
-        if (fread(out, 1, n_bytes, fp) != n_bytes) {
-            rc = TRICUBE_ERR_IO;
-        }
-    }
-    fclose(fp);
-    return rc == 0 ? TRICUBE_OK : TRICUBE_ERR_IO;
+    return stream_seed_profile(seed, out, n_bytes, profile);
 }
 
 int tricube_stream_write(FILE *out, uint64_t seed, uint64_t n_bytes) {
+    return tricube_stream_write_variant(out, seed, n_bytes, TRICUBE_STREAM_BASELINE);
+}
+
+int tricube_stream_write_variant(FILE *out, uint64_t seed, uint64_t n_bytes, tricube_stream_variant variant) {
     if (out == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
-    int rc = write_stream(out, seed, n_bytes, 1U << 16, 12);
+    const stream_profile *profile = stream_profile_for_variant(variant);
+    if (profile == NULL) {
+        return TRICUBE_ERR_INVALID_ARGUMENT;
+    }
+    int rc = write_stream_profile(out, seed, n_bytes, 1U << 20, profile);
+    return rc == 0 ? TRICUBE_OK : TRICUBE_ERR_IO;
+}
+
+int tricube_stream_write_unbounded(FILE *out, uint64_t seed, tricube_stream_variant variant) {
+    if (out == NULL) {
+        return TRICUBE_ERR_INVALID_ARGUMENT;
+    }
+    const stream_profile *profile = stream_profile_for_variant(variant);
+    if (profile == NULL) {
+        return TRICUBE_ERR_INVALID_ARGUMENT;
+    }
+    int rc = write_stream_profile_unbounded(out, seed, 1U << 20, profile);
     return rc == 0 ? TRICUBE_OK : TRICUBE_ERR_IO;
 }
 

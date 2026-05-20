@@ -2,6 +2,22 @@
 
 TriCube remains experimental. These results support continued testing and external review; they do not establish cryptographic security.
 
+## 2026-05-20 Fast8x Stream Update
+
+The public C API now includes an explicit experimental stream variant,
+`fast8x`, for continued statistical testing. It does not replace the released
+baseline stream and must be requested by name.
+
+In the ablation-lab run, `fast8x` measured `132.655 MiB/s` on a 256 MiB stream
+benchmark, compared with `69.796 MiB/s` for the baseline in the same harness.
+The ablation record lists `fast8x` as clean through PractRand 1 GiB, SmokeRand
+express 7/7, and TestU01 SmallCrush 15/15. Faster candidates were not promoted
+because they introduced low-bit PractRand warnings or failures.
+
+See `experiments/ablation-lab/` for the compact public ablation record. This
+update is performance and statistical-screening evidence only; it does not
+establish cryptographic security.
+
 ## Environment
 
 | Item | Value |
@@ -75,6 +91,8 @@ These probes are development gates. They can find obvious problems, but they do 
 
 | Implementation / mode | Throughput | Notes |
 |---|---:|---|
+| Experimental C `fast8x` stream variant | 132.655 MiB/s | 256 MiB ablation-lab run; explicit opt-in variant. |
+| Released C baseline stream in same ablation harness | 69.796 MiB/s | Same 256 MiB benchmark run as `fast8x`. |
 | `tricube_tc256_xof_fast` | 80.158 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
 | `tricube_geo256_chain_fast` | 62.255 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
 | `tricube_tetra_block256_chain_fast` | 57.276 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
@@ -122,4 +140,3 @@ The wrong public claim is:
 - algebraic and invariant analysis;
 - birthday and near-collision sweeps at larger practical scales;
 - optimized C throughput comparison against SHA-256, SHA3/SHAKE, BLAKE2, and BLAKE3 libraries.
-
