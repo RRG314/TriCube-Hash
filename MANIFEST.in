@@ -1,0 +1,16 @@
+include README.md
+include LICENSE
+include CITATION.cff
+include CHANGELOG.md
+include SECURITY.md
+include CONTRIBUTING.md
+include tests/vectors/tricube_vectors.json
+recursive-include docs *.md
+recursive-include paper *.md *.bib *.svg *.docx *.pdf
+recursive-include examples *.py *.c
+recursive-include c *.h *.c Makefile CMakeLists.txt
+recursive-include tools *.md *.sh *.py
+recursive-include results README.md *.md
+prune c/build
+prune results/raw
+global-exclude __pycache__ *.py[cod] .DS_Store

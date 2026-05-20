@@ -1,0 +1,54 @@
+#ifndef TRICUBE_H
+#define TRICUBE_H
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define TRICUBE_VERSION "0.1.0"
+#define TRICUBE_DIGEST_BYTES 32
+#define TRICUBE_HEX_BYTES 65
+#define TRICUBE_DEFAULT_ROUNDS 16
+
+enum {
+    TRICUBE_OK = 0,
+    TRICUBE_ERR_INVALID_ARGUMENT = 1,
+    TRICUBE_ERR_ALLOCATION = 2,
+    TRICUBE_ERR_IO = 3,
+    TRICUBE_ERR_SELF_TEST = 4
+};
+
+typedef struct tricube_ctx {
+    uint8_t *data;
+    size_t data_len;
+    size_t data_cap;
+    uint8_t finalized;
+    uint8_t digest[TRICUBE_DIGEST_BYTES];
+    uint8_t *xof_cache;
+    size_t xof_cache_len;
+    size_t squeeze_pos;
+} tricube_ctx;
+
+int tricube_hash(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGEST_BYTES]);
+int tricube_hexdigest(const uint8_t *data, size_t data_len, char out_hex[TRICUBE_HEX_BYTES]);
+int tricube_xof(const uint8_t *data, size_t data_len, uint8_t *out, size_t out_len);
+
+int tricube_init(tricube_ctx *ctx);
+int tricube_update(tricube_ctx *ctx, const uint8_t *data, size_t data_len);
+int tricube_finalize(tricube_ctx *ctx, uint8_t out[TRICUBE_DIGEST_BYTES]);
+int tricube_squeeze(tricube_ctx *ctx, uint8_t *out, size_t out_len);
+void tricube_free(tricube_ctx *ctx);
+
+int tricube_stream_seed(uint64_t seed, uint8_t *out, size_t n_bytes);
+int tricube_stream_write(FILE *out, uint64_t seed, uint64_t n_bytes);
+int tricube_self_test(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

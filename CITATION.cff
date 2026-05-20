@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use TriCube in research, please cite this repository."
+title: "TriCube"
+authors:
+  - family-names: "Reid"
+    given-names: "Steven"
+year: 2026
+version: "0.1.0"
+repository-code: "https://github.com/RRG314/tricube-hash"
+license: "MIT"
+abstract: "Experimental geometric hash/XOF candidate based on tetrahedral cube-connected state evolution."
+

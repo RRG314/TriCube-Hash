@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tricube-hash"
+version = "0.1.0"
+description = "Experimental geometric hash/XOF candidate based on tetrahedral cube-connected state evolution."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+  {name = "Steven Reid"}
+]
+keywords = ["hash", "xof", "experimental cryptography", "testing", "tetrahedral"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Security :: Cryptography",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest"]
+dev = ["pytest", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/RRG314/tricube-hash"
+Repository = "https://github.com/RRG314/tricube-hash"
+Issues = "https://github.com/RRG314/tricube-hash/issues"
+
+[project.scripts]
+tricube-py = "tricube.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "python/src"}
+
+[tool.setuptools.packages.find]
+where = ["python/src"]
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests", "tests/smoke"]
+pythonpath = ["python/src"]

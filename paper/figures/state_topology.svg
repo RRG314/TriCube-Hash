@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
+  <rect width="720" height="420" fill="white"/>
+  <text x="40" y="42" font-family="Arial" font-size="24" font-weight="700">TriCube state topology</text>
+  <text x="40" y="72" font-family="Arial" font-size="14" fill="#444">27 vertex lanes form a 3 x 3 x 3 cube grid; five shell lanes carry global coupling.</text>
+  <g transform="translate(110,110)" stroke="#1d3557" stroke-width="2" fill="#f1faee">
+    <g opacity="0.6">
+      <line x1="0" y1="0" x2="220" y2="0"/>
+      <line x1="0" y1="90" x2="220" y2="90"/>
+      <line x1="0" y1="180" x2="220" y2="180"/>
+      <line x1="0" y1="0" x2="0" y2="180"/>
+      <line x1="110" y1="0" x2="110" y2="180"/>
+      <line x1="220" y1="0" x2="220" y2="180"/>
+      <line x1="55" y1="-45" x2="275" y2="-45"/>
+      <line x1="55" y1="45" x2="275" y2="45"/>
+      <line x1="55" y1="135" x2="275" y2="135"/>
+      <line x1="55" y1="-45" x2="55" y2="135"/>
+      <line x1="165" y1="-45" x2="165" y2="135"/>
+      <line x1="275" y1="-45" x2="275" y2="135"/>
+      <line x1="0" y1="0" x2="55" y2="-45"/>
+      <line x1="110" y1="0" x2="165" y2="-45"/>
+      <line x1="220" y1="0" x2="275" y2="-45"/>
+      <line x1="0" y1="90" x2="55" y2="45"/>
+      <line x1="110" y1="90" x2="165" y2="45"/>
+      <line x1="220" y1="90" x2="275" y2="45"/>
+      <line x1="0" y1="180" x2="55" y2="135"/>
+      <line x1="110" y1="180" x2="165" y2="135"/>
+      <line x1="220" y1="180" x2="275" y2="135"/>
+    </g>
+    <g fill="#457b9d">
+      <circle cx="0" cy="0" r="7"/><circle cx="110" cy="0" r="7"/><circle cx="220" cy="0" r="7"/>
+      <circle cx="0" cy="90" r="7"/><circle cx="110" cy="90" r="7"/><circle cx="220" cy="90" r="7"/>
+      <circle cx="0" cy="180" r="7"/><circle cx="110" cy="180" r="7"/><circle cx="220" cy="180" r="7"/>
+      <circle cx="55" cy="-45" r="7"/><circle cx="165" cy="-45" r="7"/><circle cx="275" cy="-45" r="7"/>
+      <circle cx="55" cy="45" r="7"/><circle cx="165" cy="45" r="7"/><circle cx="275" cy="45" r="7"/>
+      <circle cx="55" cy="135" r="7"/><circle cx="165" cy="135" r="7"/><circle cx="275" cy="135" r="7"/>
+    </g>
+  </g>
+  <g transform="translate(500,116)" font-family="Arial" font-size="14">
+    <rect x="0" y="0" width="160" height="180" fill="#f8f9fa" stroke="#adb5bd"/>
+    <text x="16" y="30" font-weight="700">Round steps</text>
+    <text x="16" y="62">1. tetrahedral ARX</text>
+    <text x="16" y="92">2. edge coupling</text>
+    <text x="16" y="122">3. shell coupling</text>
+    <text x="16" y="152">4. lane permutation</text>
+  </g>
+</svg>
+
