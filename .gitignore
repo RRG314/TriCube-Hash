@@ -9,6 +9,10 @@ dist/
 *.egg-info/
 c/build/
 results/tmp/
+tests/crypto_analysis/results/
+paper/*.docx
+paper/*.pdf
+!paper/TriCube_Short_Manuscript_2026-05-20.docx
 *.bin
 *.o
 .DS_Store

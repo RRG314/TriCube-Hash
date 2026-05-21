@@ -14,6 +14,11 @@ extern "C" {
 #define TRICUBE_HEX_BYTES 65
 #define TRICUBE_DEFAULT_ROUNDS 16
 
+typedef enum tricube_stream_variant {
+    TRICUBE_STREAM_BASELINE = 0,
+    TRICUBE_STREAM_FAST8X = 1
+} tricube_stream_variant;
+
 enum {
     TRICUBE_OK = 0,
     TRICUBE_ERR_INVALID_ARGUMENT = 1,
@@ -45,6 +50,16 @@ void tricube_free(tricube_ctx *ctx);
 
 int tricube_stream_seed(uint64_t seed, uint8_t *out, size_t n_bytes);
 int tricube_stream_write(FILE *out, uint64_t seed, uint64_t n_bytes);
+int tricube_stream_seed_variant(uint64_t seed, uint8_t *out, size_t n_bytes, tricube_stream_variant variant);
+int tricube_stream_write_variant(FILE *out, uint64_t seed, uint64_t n_bytes, tricube_stream_variant variant);
+int tricube_stream_write_unbounded(FILE *out, uint64_t seed, tricube_stream_variant variant);
+const char *tricube_stream_variant_name(tricube_stream_variant variant);
+int tricube_stream_variant_from_name(const char *name, tricube_stream_variant *variant);
+
+int tricube_fast8x_stream_seed(uint64_t seed, uint8_t *out, size_t n_bytes);
+int tricube_fast8x_stream_write(FILE *out, uint64_t seed, uint64_t n_bytes);
+int tricube_fast8x_stream_write_unbounded(FILE *out, uint64_t seed);
+
 int tricube_self_test(void);
 
 #ifdef __cplusplus

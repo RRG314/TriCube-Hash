@@ -2,7 +2,7 @@
 
 TriCube is experimental and should not be used for security-critical work.
 
-The current implementation has deterministic tests, fixed vectors, C/Python agreement checks, internal statistical checks, and several external-battery evaluations. Those results are useful for engineering triage. They are not a proof of security.
+The current implementation has deterministic tests, fixed vectors, C/Python agreement checks, project statistical checks, and several external-battery evaluations. Those results are useful for engineering triage. They are not a proof of security.
 
 ## Known Evidence
 
@@ -18,9 +18,43 @@ The current public repository includes:
 - TestU01 Crush PASS, 144/144;
 - Dieharder battery result of 109 PASS, 2 WEAK, and 0 FAIL;
 - PractRand 1 GiB WARN because of unresolved low-bit warnings;
+- experimental `fast8x` stream benchmark result of 132.655 MiB/s on a 256
+  MiB run, compared with 69.796 MiB/s for the released baseline in the same
+  ablation harness;
+- `fast8x` screening evidence through PractRand 1 GiB, SmokeRand express 7/7,
+  TestU01 SmallCrush 15/15, and 16 MiB sanity probes;
+- a first white-box word-dependency model showing full 32-lane dependency by
+  round 2 at 64-bit lane granularity;
 - scripts for PractRand, Dieharder, TestU01, and NIST STS workflows.
 
 The PractRand 1 GiB evaluation reached the final level with no anomalies in 2050 final-level results, but earlier levels flagged suspicious or unusual low-bit behavior. That result is classified as WARN.
+
+The structural probes in the result summary are black-box development screens:
+the black-box differential diffusion probe, black-box rotational relation
+probe, small black-box algebraic degree screen, collision/birthday sanity
+check, overlap/fork stream uniqueness screen, black-box
+state-recovery/predictability screen, and low-bit diagnostic screen. They are
+useful for finding obvious diffusion, rotation, overlap, prediction, collision,
+and low-bit warning patterns. They are not formal differential cryptanalysis,
+formal rotational cryptanalysis, algebraic cryptanalysis, collision-resistance
+evidence, or state-recovery proofs.
+
+The white-box round model is stronger than a black-box output probe in one
+narrow way: it inspects the specified tetrahedron, edge, shell, and permutation
+schedule directly. Its current result is only a word-level reachability result.
+It does not model bit-level differential probabilities, rotational trails,
+algebraic equations, or attack cost.
+
+The reproducible versions of these screens now live in
+`tests/crypto_analysis/`. They record compact JSON, Markdown, and CSV
+summaries with branch, commit, command, seed, sample count, byte count, and
+PASS/WARN/FAIL/BLOCKED/NOT_RUN status labels.
+
+The open-source tooling plan is in [tooling.md](tooling.md). The intended path
+for deeper work is to build a verified reduced-round TriCube model and then use
+standard solvers and algebra systems such as Z3, SageMath, SAT solvers, and
+cryptanalysis frameworks where they fit. The repo does not treat custom
+black-box screens as substitutes for those tools.
 
 ## Unknowns
 
@@ -28,10 +62,11 @@ The following work has not been completed:
 
 - independent cryptanalysis;
 - reduced-round attack study;
-- differential trail analysis;
-- rotational symmetry analysis;
-- algebraic degree and invariant analysis;
-- state-recovery attempts;
+- formal differential trail analysis;
+- formal rotational-distinguisher analysis;
+- algebraic degree and invariant analysis at useful scale;
+- SAT/SMT/MILP or Gröbner-style reduced-round modeling;
+- state-recovery attack attempts;
 - collision and near-collision search at meaningful scales;
 - domain-separation review;
 - multi-seed long-run PractRand, TestU01 Crush reruns, and TestU01 BigCrush campaigns;

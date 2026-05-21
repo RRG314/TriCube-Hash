@@ -6,6 +6,12 @@ SHA-2 is standardized in NIST FIPS 180-4. SHA-3 and SHAKE are standardized in NI
 
 TriCube also resembles sponge and ARX systems in broad structure: it absorbs input, permutes state, and squeezes output using addition, xor, and rotation operations. Those ingredients are not novel by themselves.
 
+Ascon is useful here as a documentation model, not as a maturity comparison.
+NIST SP 800-232 specifies the Ascon family by first defining the permutation,
+state representation, constants, rates, padding, and modes. TriCube's
+specification follows that style for clarity, but TriCube is not standardized
+and has not received comparable public cryptanalytic review.
+
 ## What May Be Distinctive
 
 The part worth studying is the state topology:
@@ -22,11 +28,23 @@ That structure may or may not survive cryptanalytic review. The repository keeps
 
 - NIST FIPS 180-4, Secure Hash Standard: https://csrc.nist.gov/pubs/fips/180-4/upd1/final
 - NIST FIPS 202, SHA-3 Standard: https://csrc.nist.gov/pubs/fips/202/final
+- NIST SP 800-232, Ascon-Based Lightweight Cryptography Standards for Constrained Devices: https://doi.org/10.6028/NIST.SP.800-232
+- Ascon v1.2, Journal of Cryptology: https://doi.org/10.1007/s00145-021-09398-9
 - BLAKE2: https://www.blake2.net/
 - BLAKE3 implementation and specification links: https://github.com/BLAKE3-team/BLAKE3
 - Keccak Team: https://keccak.team/
 - KangarooTwelve: https://keccak.team/kangarootwelve.html
 - CubeHash reference material: https://ehash.isec.tugraz.at/wiki/CubeHash.html
 
-The comparison status is incomplete until TriCube has a full benchmark set against optimized C implementations and independent cryptanalysis against the reduced-round and full-round construction.
+The current public benchmark comparison is intentionally narrower than a
+competitive hash-library shootout. The released TriCube stream path and the
+experimental `fast8x` stream path have been compared in the same C ablation
+harness: `fast8x` measured 132.655 MiB/s on a 256 MiB stream run, while the
+released baseline measured 69.796 MiB/s in that same run. The repo also reports
+project controls and battery-screen results for `fast8x`.
 
+What remains incomplete is the broader comparison that would matter for public
+performance claims: optimized C implementations of SHA-256, SHA3/SHAKE,
+BLAKE2, BLAKE3, and other mature hash/XOF libraries on the same hardware, plus
+independent cryptanalysis against the reduced-round and full-round TriCube
+construction.

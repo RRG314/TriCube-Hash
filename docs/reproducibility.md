@@ -1,6 +1,6 @@
 # Reproducibility
 
-This repository is organized so a reviewer can rebuild the C implementation, install the Python package, run tests, regenerate vectors, and rerun the public benchmark scripts without relying on private machine paths.
+This repository is organized so a reviewer can rebuild the C implementation, install the Python package, run tests, regenerate vectors, and rerun the public benchmark scripts without relying on machine-specific paths.
 
 ## Environment
 
@@ -13,11 +13,18 @@ Recommended baseline:
 
 Optional external tools:
 
+- Z3;
+- SageMath;
+- CryptoMiniSat;
 - PractRand;
 - Dieharder;
 - TestU01 wrappers;
 - NIST STS;
 - SmokeRand.
+
+These tools are not bundled in the TriCube repository or PyPI package. Install
+them separately and follow their upstream licenses. See
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for the public notice table.
 
 ## Rebuild
 
@@ -49,8 +56,56 @@ The C and Python implementations should agree on the fixed vectors.
 ```bash
 python benchmarks/bench_hash_sizes.py --quick
 python benchmarks/bench_throughput.py --quick
-python benchmarks/bench_stream.py --bytes 1048576
+python benchmarks/bench_stream.py --bytes 1048576 --variants baseline,fast8x
+python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x --skip-python
 ```
+
+The `fast8x` stream variant is an experimental optimized path. It is not the
+default and does not replace the baseline stream. The ablation record explaining
+why it was added is in [tests/ablation_lab/](../tests/ablation_lab/). The
+public snapshot reports `fast8x` at 132.655 MiB/s on a 256 MiB stream run,
+compared with 69.796 MiB/s for the released baseline in the same harness. That
+is a same-machine comparison against the TriCube baseline, not a claim that
+`fast8x` has been competitively benchmarked against optimized SHA-2, SHA-3,
+BLAKE2, or BLAKE3 implementations.
+
+## Development Screens
+
+The compact development screens are reproducible without storing large raw
+streams:
+
+```bash
+python tests/crypto_analysis/run_all_screens.py \
+  --profile quick \
+  --variants baseline,fast8x \
+  --out tests/crypto_analysis/results/quick-latest
+
+python tests/crypto_analysis/screens/low_bit_diagnostics.py \
+  --variants baseline,fast8x \
+  --bytes 16777216 \
+  --out tests/crypto_analysis/results/low-bit-latest
+
+python tests/crypto_analysis/screens/whitebox_round_model.py \
+  --rounds 24 \
+  --out tests/crypto_analysis/results/whitebox-latest
+```
+
+These screens write compact JSON, Markdown, and CSV summaries. They do not
+replace external batteries or formal cryptanalysis.
+
+## Optional Analysis Tooling
+
+Check local solver and battery availability:
+
+```bash
+python tests/crypto_analysis/tooling/check_tools.py
+python tests/crypto_analysis/tooling/z3_smoke.py
+sage -python tests/crypto_analysis/tooling/sage_smoke.py
+```
+
+Missing optional tools are reported as `NOT_INSTALLED`. They are not repository
+test failures. See [docs/tooling.md](tooling.md) for the tool plan and the
+custom TriCube model work required before solver results should be interpreted.
 
 ## External Batteries
 

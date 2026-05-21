@@ -1,0 +1,6 @@
+rank,variant,speed_mib_s,classification,recommendation,reason
+1,fast8x,132.65,best_speed_safety_tradeoff,include_as_experimental_variant,Clean 1 GiB PractRand screen plus SmokeRand express and SmallCrush passes; speed improved without the observed low-bit failures.
+2,fast8x512,230.74,fast_with_warning,hold_for_research,Mild recurring PractRand low-bit unusual rows.
+3,fast8x_wide,285.71,near_target_failed,reject_current_design,Near target but showed very suspicious low-bit PractRand rows.
+4,fast8x_batch,311.98,fast_failed,reject_current_design,Met speed target but failed PractRand low-bit FPF checks at 8 KiB.
+5,fast4x512,371.32,fast_failed,reject_current_design,Fastest measured path but warning density was too high.

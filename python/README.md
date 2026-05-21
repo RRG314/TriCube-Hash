@@ -13,7 +13,7 @@ The full project repository is:
 
 https://github.com/RRG314/tricube-hash
 
-The current manuscript draft is kept with the repository:
+The current manuscript is kept with the repository:
 
 https://github.com/RRG314/tricube-hash/tree/main/paper
 
@@ -78,11 +78,21 @@ tricube hash --hex 616263
 This package contains the clean Python reference implementation and fixed test
 vectors. The public GitHub repository also contains the standalone C
 implementation, benchmarks, external-battery scripts, documentation, and the
-manuscript draft.
+manuscript.
 
 The current evidence supports continued research and external review. It does
 not establish collision resistance, preimage resistance, pseudorandomness, or
 security for real applications.
+
+## Third-Party Tools
+
+The PyPI package does not bundle SmokeRand, PractRand, Dieharder, TestU01, NIST
+STS, third-party hash implementations, external binaries, raw battery logs, or
+manuscript files. External batteries referenced by the repository must be
+installed separately and used under their own upstream licenses. The repository
+notice table is maintained at:
+
+https://github.com/RRG314/tricube-hash/blob/main/THIRD_PARTY_NOTICES.md
 
 ## License
 

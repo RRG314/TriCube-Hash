@@ -6,6 +6,8 @@ This document describes the current public construction. It does not claim that 
 
 ## State Model
 
+![TriCube state layout](figures/state-layout.svg)
+
 The internal state has 32 lanes of 64 bits each, for a total of 2048 bits.
 
 Twenty-seven lanes are interpreted as the vertices of a 3 x 3 x 3 grid. That grid contains eight unit cube cells. Each cube cell has eight vertices. The remaining five lanes are shell lanes used to carry length, domain, and global coupling information.
@@ -19,6 +21,8 @@ index(x, y, z) = x + 3 * (y + 3 * z)
 where each coordinate is in `{0, 1, 2}`.
 
 ## Tetrahedral Decomposition
+
+![TriCube tetrahedral decomposition](figures/tetrahedral-decomposition.svg)
 
 Each cube cell is decomposed into six tetrahedra. For a cube with local vertices numbered from 0 to 7, the local tetrahedra are:
 
@@ -37,6 +41,8 @@ This tetrahedral decomposition is the main structural distinction from a flat AR
 
 ## Round Function
 
+![TriCube round flow](figures/round-flow.svg)
+
 A TriCube round applies four steps:
 
 1. Local tetrahedral mixing over each tetrahedron.
@@ -52,9 +58,15 @@ TriCube absorbs message blocks into selected lanes, applies partial permutation 
 
 Digest mode emits 32 bytes. XOF mode emits an arbitrary number of bytes by continuing the squeeze schedule. Stream mode initializes from a seed and emits deterministic stream bytes for statistical testing.
 
-The construction uses domain separation strings internally so hash, XOF, and stream behavior do not share the same state initialization path. Some internal domain strings retain earlier prototype labels so the May 2026 test vectors remain reproducible. The public project name is TriCube.
+The default stream path is the released baseline. The C API also exposes an
+experimental `fast8x` stream variant for continued testing. `fast8x` is
+domain-separated from the baseline, uses fewer rounds in the stream update path,
+widens the stream extraction rate, and adds an xmix output layer. It
+does not change digest mode, XOF mode, fixed vectors, or the default stream
+behavior.
+
+The construction uses domain separation strings so hash, XOF, and stream behavior do not share the same state initialization path. Some implementation domain strings retain earlier prototype labels so the May 2026 test vectors remain reproducible. The public project name is TriCube.
 
 ## What Is Not Claimed
 
 TriCube is not a standardized sponge construction, not a proven permutation, not a keyed MAC, and not a validated random bit generator. The current design is a candidate that needs external review and stronger analysis before it can responsibly make cryptographic claims.
-
