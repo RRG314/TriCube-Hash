@@ -38,10 +38,28 @@ python tests/crypto_analysis/run_all_screens.py \
   --out tests/crypto_analysis/results/quick-latest
 ```
 
+## Individual Screens
+
+The all-in-one runner calls the same screen modules listed below. Reviewers can
+run any screen by itself when they want to inspect one method, one output table,
+or one threshold policy.
+
+| Screen | Command |
+|---|---|
+| Differential diffusion | `python tests/crypto_analysis/screens/differential_screen.py --variants baseline,fast8x --samples 64 --out tests/crypto_analysis/results/differential-latest` |
+| Rotational relation | `python tests/crypto_analysis/screens/rotational_screen.py --variants baseline,fast8x --samples 64 --out tests/crypto_analysis/results/rotational-latest` |
+| Algebraic degree | `python tests/crypto_analysis/screens/algebraic_degree_screen.py --variants baseline,fast8x --variables 8 --output-bits 32 --out tests/crypto_analysis/results/algebraic-latest` |
+| Collision and birthday | `python tests/crypto_analysis/screens/collision_screen.py --variants baseline,fast8x --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/collision-latest` |
+| Overlap/fork uniqueness | `python tests/crypto_analysis/screens/overlap_fork_screen.py --variants baseline,fast8x --bytes 1048576 --out tests/crypto_analysis/results/overlap-latest` |
+| State-recovery/predictability | `python tests/crypto_analysis/screens/state_recovery_screen.py --variants baseline,fast8x --bytes 1048576 --bm-bits 4096 --out tests/crypto_analysis/results/state-recovery-latest` |
+| Low-bit diagnostics | `python tests/crypto_analysis/screens/low_bit_diagnostics.py --variants baseline,fast8x --bytes 16777216 --out tests/crypto_analysis/results/low-bit-latest` |
+| White-box word-dependency model | `python tests/crypto_analysis/screens/whitebox_round_model.py --rounds 24 --out tests/crypto_analysis/results/whitebox-latest` |
+| External battery availability | `python tests/crypto_analysis/screens/external_batteries.py --variants baseline,fast8x --out tests/crypto_analysis/results/external-latest` |
+
 Low-bit diagnostics at 16 MiB per variant:
 
 ```bash
-python tests/crypto_analysis/low_bit_diagnostics.py \
+python tests/crypto_analysis/screens/low_bit_diagnostics.py \
   --variants baseline,fast8x \
   --bytes 16777216 \
   --out tests/crypto_analysis/results/low-bit-latest
@@ -50,7 +68,7 @@ python tests/crypto_analysis/low_bit_diagnostics.py \
 White-box word-dependency model:
 
 ```bash
-python tests/crypto_analysis/whitebox_round_model.py \
+python tests/crypto_analysis/screens/whitebox_round_model.py \
   --rounds 24 \
   --out tests/crypto_analysis/results/whitebox-latest
 ```

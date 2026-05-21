@@ -75,12 +75,12 @@ python tests/crypto_analysis/run_all_screens.py \
   --variants baseline,fast8x \
   --out tests/crypto_analysis/results/quick-latest
 
-python tests/crypto_analysis/low_bit_diagnostics.py \
+python tests/crypto_analysis/screens/low_bit_diagnostics.py \
   --variants baseline,fast8x \
   --bytes 16777216 \
   --out tests/crypto_analysis/results/low-bit-latest
 
-python tests/crypto_analysis/whitebox_round_model.py \
+python tests/crypto_analysis/screens/whitebox_round_model.py \
   --rounds 24 \
   --out tests/crypto_analysis/results/whitebox-latest
 ```

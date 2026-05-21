@@ -136,7 +136,7 @@ TriCube currently runs a **low-bit diagnostic screen**. It measures:
 The standalone low-bit command is:
 
 ```bash
-python tests/crypto_analysis/low_bit_diagnostics.py \
+python tests/crypto_analysis/screens/low_bit_diagnostics.py \
   --variants baseline,fast8x \
   --bytes 16777216 \
   --out tests/crypto_analysis/results/low-bit-latest
@@ -150,7 +150,7 @@ The black-box probes above observe output bytes. The current branch also
 contains a first white-box schedule analyzer:
 
 ```bash
-python tests/crypto_analysis/whitebox_round_model.py \
+python tests/crypto_analysis/screens/whitebox_round_model.py \
   --rounds 24 \
   --out tests/crypto_analysis/results/whitebox-latest
 ```
@@ -197,6 +197,24 @@ python tests/crypto_analysis/run_all_screens.py \
 ```
 
 Each run writes `summary.json`, `summary.md`, one CSV and Markdown table per screen, and `all_screens.csv`. It does not store large raw streams.
+
+Each screen can also be run on its own from `tests/crypto_analysis/screens/`.
+The individual entry points are:
+
+| Screen | Script |
+|---|---|
+| Black-box differential diffusion probe | `tests/crypto_analysis/screens/differential_screen.py` |
+| Black-box rotational relation probe | `tests/crypto_analysis/screens/rotational_screen.py` |
+| Small black-box algebraic degree screen | `tests/crypto_analysis/screens/algebraic_degree_screen.py` |
+| Collision/birthday and near-collision sanity checks | `tests/crypto_analysis/screens/collision_screen.py` |
+| Overlap/fork stream uniqueness screen | `tests/crypto_analysis/screens/overlap_fork_screen.py` |
+| Black-box state-recovery/predictability screen | `tests/crypto_analysis/screens/state_recovery_screen.py` |
+| Low-bit diagnostic screen | `tests/crypto_analysis/screens/low_bit_diagnostics.py` |
+| White-box word-dependency model | `tests/crypto_analysis/screens/whitebox_round_model.py` |
+| External battery availability check | `tests/crypto_analysis/screens/external_batteries.py` |
+
+The all-in-one runner imports these same modules. There is no second hidden
+implementation of the screens.
 
 ## From Screens to Proper Cryptanalysis
 

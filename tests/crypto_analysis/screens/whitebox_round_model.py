@@ -14,6 +14,10 @@ import json
 import statistics
 from pathlib import Path
 
+from _bootstrap import ensure_import_path
+
+ensure_import_path()
+
 from common import environment, markdown_table, write_csv, write_json
 from models.tricube_schedule import (
     STATE_WORDS,

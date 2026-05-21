@@ -20,3 +20,6 @@ lab explains why one variant was kept. The crypto-analysis screens explain how
 the current probes are run and what they do not prove. Neither folder
 establishes cryptographic security.
 
+Inside `crypto_analysis/`, the `screens/` subfolder contains the individual
+screen entry points. `run_all_screens.py` remains as the combined runner and
+imports those same screen modules.
