@@ -62,7 +62,7 @@ python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x -
 
 The `fast8x` stream variant is an experimental optimized path. It is not the
 default and does not replace the baseline stream. The ablation record explaining
-why it was added is in [experiments/ablation-lab/](../experiments/ablation-lab/).
+why it was added is in [tests/ablation_lab/](../tests/ablation_lab/).
 
 ## Development Screens
 
@@ -70,19 +70,19 @@ The compact development screens are reproducible without storing large raw
 streams:
 
 ```bash
-python experiments/crypto-analysis/run_all_screens.py \
+python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
   --variants baseline,fast8x \
-  --out experiments/crypto-analysis/results/quick-latest
+  --out tests/crypto_analysis/results/quick-latest
 
-python experiments/crypto-analysis/low_bit_diagnostics.py \
+python tests/crypto_analysis/low_bit_diagnostics.py \
   --variants baseline,fast8x \
   --bytes 16777216 \
-  --out experiments/crypto-analysis/results/low-bit-latest
+  --out tests/crypto_analysis/results/low-bit-latest
 
-python experiments/crypto-analysis/whitebox_round_model.py \
+python tests/crypto_analysis/whitebox_round_model.py \
   --rounds 24 \
-  --out experiments/crypto-analysis/results/whitebox-latest
+  --out tests/crypto_analysis/results/whitebox-latest
 ```
 
 These screens write compact JSON, Markdown, and CSV summaries. They do not
@@ -93,9 +93,9 @@ replace external batteries or formal cryptanalysis.
 Check local solver and battery availability:
 
 ```bash
-python experiments/crypto-analysis/tooling/check_tools.py
-python experiments/crypto-analysis/tooling/z3_smoke.py
-sage -python experiments/crypto-analysis/tooling/sage_smoke.py
+python tests/crypto_analysis/tooling/check_tools.py
+python tests/crypto_analysis/tooling/z3_smoke.py
+sage -python tests/crypto_analysis/tooling/sage_smoke.py
 ```
 
 Missing optional tools are reported as `NOT_INSTALLED`. They are not repository

@@ -17,7 +17,7 @@ The primitive is specified in [docs/specification.md](docs/specification.md). Th
 The security boundary is in [docs/security-status.md](docs/security-status.md). TriCube has black-box development probes and statistical-battery results, but it does not have formal differential, rotational, algebraic, or reduced-round cryptanalysis. The terms used in this repository are deliberately narrow: a probe or screen is an engineering check for obvious failures, not a security proof.
 
 The reproducible black-box screen suite is in
-[experiments/crypto-analysis/](experiments/crypto-analysis/). It records the
+[tests/crypto_analysis/](tests/crypto_analysis/). It records the
 exact command, branch, commit, machine, seed, byte count, and status labels for
 each compact run. The same folder also contains a first white-box round-model
 analyzer that checks word-level schedule dependency and coverage without
@@ -112,7 +112,7 @@ The default stream path remains the released baseline. This branch also adds an
 experimental `fast8x` stream variant for external statistical testing. It is
 domain-separated from the baseline and must be requested explicitly with
 `--variant fast8x`. The ablation evidence for that choice is summarized in
-[experiments/ablation-lab/](experiments/ablation-lab/).
+[tests/ablation_lab/](tests/ablation_lab/).
 
 ### Statistical Batteries
 

@@ -8,7 +8,7 @@ This directory contains concise public-facing result summaries, not large uncura
 - `raw/practrand-1gb-stdout-2026-05-19.txt` preserves the corresponding PractRand output log.
 
 The fast8x stream optimization is documented under
-`experiments/ablation-lab/` rather than as a large result-log bundle. That record
+`tests/ablation_lab/` rather than as a large result-log bundle. That record
 explains why `fast8x` was added as an explicit experimental stream variant and
 why faster low-bit-warning variants were not promoted.
 

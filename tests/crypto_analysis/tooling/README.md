@@ -19,19 +19,19 @@ The scripts are deliberately small:
 Check tool availability:
 
 ```bash
-python experiments/crypto-analysis/tooling/check_tools.py
+python tests/crypto_analysis/tooling/check_tools.py
 ```
 
 Run the Z3 smoke test if `z3-solver` is installed:
 
 ```bash
-python experiments/crypto-analysis/tooling/z3_smoke.py
+python tests/crypto_analysis/tooling/z3_smoke.py
 ```
 
 Run the SageMath smoke test if `sage` is installed:
 
 ```bash
-sage -python experiments/crypto-analysis/tooling/sage_smoke.py
+sage -python tests/crypto_analysis/tooling/sage_smoke.py
 ```
 
 Missing tools are reported as `NOT_INSTALLED`, not as repository failures.

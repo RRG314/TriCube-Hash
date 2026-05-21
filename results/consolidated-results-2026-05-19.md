@@ -14,14 +14,14 @@ The ablation record lists `fast8x` as clean through PractRand 1 GiB, SmokeRand
 express 7/7, and TestU01 SmallCrush 15/15. Faster candidates were not promoted
 because they introduced low-bit PractRand warnings or failures.
 
-See `experiments/ablation-lab/` for the compact public ablation record. This
+See `tests/ablation_lab/` for the compact public ablation record. This
 update is performance and statistical-screening evidence only; it does not
 establish cryptographic security.
 
 ## 2026-05-20 Probe/Screens Reproducibility Update
 
 The black-box development probes have been moved from result-only descriptions
-into a reproducible screen suite under `experiments/crypto-analysis/`. The
+into a reproducible screen suite under `tests/crypto_analysis/`. The
 suite uses precise names for each screen: black-box differential diffusion
 probe, black-box rotational relation probe, small black-box algebraic degree
 screen, collision/birthday sanity check, near-collision sanity check,
@@ -43,24 +43,24 @@ coverage evidence, but it is not bit-level differential, rotational, algebraic,
 or state-recovery cryptanalysis.
 
 The compact screen outputs are generated locally under
-`experiments/crypto-analysis/results/`. Those generated per-run folders are not
+`tests/crypto_analysis/results/`. Those generated per-run folders are not
 committed to the public branch so the repository does not accumulate duplicate
 machine-specific result snapshots. Reproduce them with:
 
 ```bash
-python3 experiments/crypto-analysis/run_all_screens.py \
+python3 tests/crypto_analysis/run_all_screens.py \
   --profile quick \
   --variants baseline,fast8x \
-  --out experiments/crypto-analysis/results/quick-latest
+  --out tests/crypto_analysis/results/quick-latest
 
-python3 experiments/crypto-analysis/low_bit_diagnostics.py \
+python3 tests/crypto_analysis/low_bit_diagnostics.py \
   --variants baseline,fast8x \
   --bytes 16777216 \
-  --out experiments/crypto-analysis/results/low-bit-latest
+  --out tests/crypto_analysis/results/low-bit-latest
 
-python3 experiments/crypto-analysis/whitebox_round_model.py \
+python3 tests/crypto_analysis/whitebox_round_model.py \
   --rounds 24 \
-  --out experiments/crypto-analysis/results/whitebox-latest
+  --out tests/crypto_analysis/results/whitebox-latest
 ```
 
 These screens are development gates. They can find obvious failures or warning

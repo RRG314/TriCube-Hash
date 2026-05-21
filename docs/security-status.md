@@ -41,7 +41,7 @@ It does not model bit-level differential probabilities, rotational trails,
 algebraic equations, or attack cost.
 
 The reproducible versions of these screens now live in
-`experiments/crypto-analysis/`. They record compact JSON, Markdown, and CSV
+`tests/crypto_analysis/`. They record compact JSON, Markdown, and CSV
 summaries with branch, commit, command, seed, sample count, byte count, and
 PASS/WARN/FAIL/BLOCKED/NOT_RUN status labels.
 

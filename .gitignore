@@ -9,7 +9,7 @@ dist/
 *.egg-info/
 c/build/
 results/tmp/
-experiments/crypto-analysis/results/
+tests/crypto_analysis/results/
 *.bin
 *.o
 .DS_Store

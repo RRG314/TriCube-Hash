@@ -54,7 +54,7 @@ collision/preimage examples. Until then, black-box probes and word-dependency
 models are development gates, not cryptanalysis.
 
 The reusable lane-schedule model is
-[`experiments/crypto-analysis/models/tricube_schedule.py`](../experiments/crypto-analysis/models/tricube_schedule.py).
+[`tests/crypto_analysis/models/tricube_schedule.py`](../tests/crypto_analysis/models/tricube_schedule.py).
 It verifies the current schedule counts: 27 vertex lanes, 5 shell lanes, 8 cube
 cells, 48 tetrahedra, 54 edges, and a 32-lane permutation. It is useful
 foundation code, but it is still a word-level schedule model rather than a
@@ -66,14 +66,14 @@ Optional tool availability can be checked without making those tools package
 dependencies:
 
 ```bash
-python experiments/crypto-analysis/tooling/check_tools.py
+python tests/crypto_analysis/tooling/check_tools.py
 ```
 
 Small solver smoke tests are available:
 
 ```bash
-python experiments/crypto-analysis/tooling/z3_smoke.py
-sage -python experiments/crypto-analysis/tooling/sage_smoke.py
+python tests/crypto_analysis/tooling/z3_smoke.py
+sage -python tests/crypto_analysis/tooling/sage_smoke.py
 ```
 
 These smoke tests only verify local setup. They do not analyze TriCube.

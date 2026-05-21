@@ -241,7 +241,7 @@ Figure 4. Black-box development-probe dashboard. (a) Differential diffusion mean
 
 ### 7.6 White-Box Round-Model Check
 
-The branch now includes a first white-box schedule model in experiments/crypto-analysis/whitebox_round_model.py. Unlike the black-box probes, this script reads the specified tetrahedron, edge, shell, and lane-permutation rules directly. It tracks word-level dependency: which original 64-bit lanes can influence which later 64-bit lanes after each round.
+The branch now includes a first white-box schedule model in tests/crypto_analysis/whitebox_round_model.py. Unlike the black-box probes, this script reads the specified tetrahedron, edge, shell, and lane-permutation rules directly. It tracks word-level dependency: which original 64-bit lanes can influence which later 64-bit lanes after each round.
 
 The 24-round local run reports 48 tetrahedral neighborhoods and 54 edge neighborhoods per round. At word granularity, all tracked state lanes reached full 32-lane dependency by round 2, and the first 32 output bytes also reached full 32-lane dependency by round 2. The same report records that shell vertex and opposite-lane schedules touch all 27 vertex lanes over the 24-round schedule period, and that edge and permutation layers use all rotation counts 1 through 61.
 
@@ -456,7 +456,7 @@ Probe scripts from the original archive must be cleaned before inclusion; public
 
 ## Appendix B: Result Artifact Index
 
-Public summary artifacts are kept under results/ and experiments/ablation-lab/ in the TriCube repository. Older raw archive artifacts are listed only for provenance when they are not included publicly.
+Public summary artifacts are kept under results/ and tests/ablation_lab/ in the TriCube repository. Older raw archive artifacts are listed only for provenance when they are not included publicly.
 
 | Artifact | Exists | Covers |
 | --- | --- | --- |

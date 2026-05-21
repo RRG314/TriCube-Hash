@@ -81,7 +81,7 @@ as an external tool, not as a bundled TriCube dependency.
 Quick profile:
 
 ```bash
-python experiments/crypto-analysis/run_all_screens.py --profile quick --variants baseline,fast8x --out experiments/crypto-analysis/results/quick-latest
+python tests/crypto_analysis/run_all_screens.py --profile quick --variants baseline,fast8x --out tests/crypto_analysis/results/quick-latest
 tools/run_practrand.sh 268435456
 tools/run_smokerand.sh express 536870912
 TESTU01_STDIN=path/to/testu01_stdin32 tools/run_testu01.sh smallcrush 1073741824

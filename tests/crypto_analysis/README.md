@@ -32,42 +32,42 @@ stream variants, but it is not a substitute for hash-mode cryptanalysis.
 Quick profile:
 
 ```bash
-python experiments/crypto-analysis/run_all_screens.py \
+python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
   --variants baseline,fast8x \
-  --out experiments/crypto-analysis/results/quick-latest
+  --out tests/crypto_analysis/results/quick-latest
 ```
 
 Low-bit diagnostics at 16 MiB per variant:
 
 ```bash
-python experiments/crypto-analysis/low_bit_diagnostics.py \
+python tests/crypto_analysis/low_bit_diagnostics.py \
   --variants baseline,fast8x \
   --bytes 16777216 \
-  --out experiments/crypto-analysis/results/low-bit-latest
+  --out tests/crypto_analysis/results/low-bit-latest
 ```
 
 White-box word-dependency model:
 
 ```bash
-python experiments/crypto-analysis/whitebox_round_model.py \
+python tests/crypto_analysis/whitebox_round_model.py \
   --rounds 24 \
-  --out experiments/crypto-analysis/results/whitebox-latest
+  --out tests/crypto_analysis/results/whitebox-latest
 ```
 
 Optional tool availability:
 
 ```bash
-python experiments/crypto-analysis/tooling/check_tools.py
+python tests/crypto_analysis/tooling/check_tools.py
 ```
 
 Standard profile:
 
 ```bash
-python experiments/crypto-analysis/run_all_screens.py \
+python tests/crypto_analysis/run_all_screens.py \
   --profile standard \
   --variants baseline,fast8x \
-  --out experiments/crypto-analysis/results/standard-latest
+  --out tests/crypto_analysis/results/standard-latest
 ```
 
 ## Output Format

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tiny SageMath smoke test for optional algebraic tooling.
 
-Run with ``sage -python experiments/crypto-analysis/tooling/sage_smoke.py``.
+Run with ``sage -python tests/crypto_analysis/tooling/sage_smoke.py``.
 This does not analyze TriCube. It only verifies that Sage can construct a small
 Boolean polynomial ring and compute a normal form.
 """

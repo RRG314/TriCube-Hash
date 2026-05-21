@@ -26,7 +26,7 @@ c/build/tricube stream --seed 123 --bytes 1024 --out results/tmp/stream.bin
 c/build/tricube stream --seed 123 --bytes 1024 --out results/tmp/stream-fast8x.bin --variant fast8x
 ```
 
-The default stream path is the released baseline. The `fast8x` stream variant is experimental and must be requested explicitly. The compact ablation record is in [experiments/ablation-lab/](../experiments/ablation-lab/).
+The default stream path is the released baseline. The `fast8x` stream variant is experimental and must be requested explicitly. The compact ablation record is in [tests/ablation_lab/](../tests/ablation_lab/).
 
 ## Status Labels
 
@@ -50,7 +50,7 @@ This section explains what each test family is normally meant to detect, what Tr
 
 Avalanche tests check whether small input changes produce broad output changes. The usual engineering target for a 256-bit digest is that flipping one input bit changes roughly half the output bits. This is related to the strict avalanche criterion introduced by Webster and Tavares.
 
-TriCube currently measures output Hamming distance, output-bit flip probability, and bit-influence spread for selected message, seed, and stream perturbations. The current black-box diffusion screens are implemented in [experiments/crypto-analysis/run_all_screens.py](../experiments/crypto-analysis/run_all_screens.py). In the quick profile, each variant is checked with 64 samples for each selected delta class. The compact output is written to `differential_screen.csv`, `differential_screen.md`, `summary.json`, and `summary.md`.
+TriCube currently measures output Hamming distance, output-bit flip probability, and bit-influence spread for selected message, seed, and stream perturbations. The current black-box diffusion screens are implemented in [tests/crypto_analysis/run_all_screens.py](../tests/crypto_analysis/run_all_screens.py). In the quick profile, each variant is checked with 64 samples for each selected delta class. The compact output is written to `differential_screen.csv`, `differential_screen.md`, `summary.json`, and `summary.md`.
 
 This is a useful development check, but it does not model the round function internally. A stronger version would include per-round hooks, explicit difference-propagation models for the ARX layers, and reduced-round trail search.
 
@@ -71,10 +71,10 @@ TriCube currently runs a **black-box differential diffusion probe**. It applies 
 The random delta classes are low-weight, medium-weight, and full-weight deltas. The metrics are mean/min/max output Hamming distance, maximum output-bit bias, a chi-square score for bit flips, repeated output differences, and the top repeated difference count. The screen accepts variants such as `baseline` and `fast8x`, seeds, sample counts, and an output directory:
 
 ```bash
-python experiments/crypto-analysis/run_all_screens.py \
+python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
   --variants baseline,fast8x \
-  --out experiments/crypto-analysis/results/quick-latest
+  --out tests/crypto_analysis/results/quick-latest
 ```
 
 This is not formal differential cryptanalysis. It does not search trails, compute maximum differential probability, build a white-box propagation model, or establish resistance to differential attacks. A real differential program for TriCube would need to model modular addition, XOR, rotation, tetrahedral lane schedules, constants, and output extraction, then search reduced-round trails and estimate attack complexity.
@@ -136,10 +136,10 @@ TriCube currently runs a **low-bit diagnostic screen**. It measures:
 The standalone low-bit command is:
 
 ```bash
-python experiments/crypto-analysis/low_bit_diagnostics.py \
+python tests/crypto_analysis/low_bit_diagnostics.py \
   --variants baseline,fast8x \
   --bytes 16777216 \
-  --out experiments/crypto-analysis/results/low-bit-latest
+  --out tests/crypto_analysis/results/low-bit-latest
 ```
 
 If this screen misses a PractRand warning, PractRand takes priority. The internal diagnostic is a local microscope, not a replacement for a battery.
@@ -150,9 +150,9 @@ The black-box probes above observe output bytes. The current branch also
 contains a first white-box schedule analyzer:
 
 ```bash
-python experiments/crypto-analysis/whitebox_round_model.py \
+python tests/crypto_analysis/whitebox_round_model.py \
   --rounds 24 \
-  --out experiments/crypto-analysis/results/whitebox-latest
+  --out tests/crypto_analysis/results/whitebox-latest
 ```
 
 This script implements the specified tetrahedron, edge, shell, and permutation
@@ -169,7 +169,7 @@ algebraic degree, SAT/SMT/MILP constraints, or attack complexity.
 
 ## Current Screen Suite
 
-The reproducible screen suite lives in [experiments/crypto-analysis/](../experiments/crypto-analysis/). It records date, branch, commit, machine, OS, Python version, command line, variants, seeds, sample counts, bytes generated, output paths, and status counts.
+The reproducible screen suite lives in [tests/crypto_analysis/](../tests/crypto_analysis/). It records date, branch, commit, machine, OS, Python version, command line, variants, seeds, sample counts, bytes generated, output paths, and status counts.
 
 Profiles are intentionally modest so they can run on a laptop:
 
@@ -181,19 +181,19 @@ Profiles are intentionally modest so they can run on a laptop:
 Run the quick suite:
 
 ```bash
-python experiments/crypto-analysis/run_all_screens.py \
+python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
   --variants baseline,fast8x \
-  --out experiments/crypto-analysis/results/quick-latest
+  --out tests/crypto_analysis/results/quick-latest
 ```
 
 Run the standard suite when runtime allows:
 
 ```bash
-python experiments/crypto-analysis/run_all_screens.py \
+python tests/crypto_analysis/run_all_screens.py \
   --profile standard \
   --variants baseline,fast8x \
-  --out experiments/crypto-analysis/results/standard-latest
+  --out tests/crypto_analysis/results/standard-latest
 ```
 
 Each run writes `summary.json`, `summary.md`, one CSV and Markdown table per screen, and `all_screens.csv`. It does not store large raw streams.
@@ -229,7 +229,7 @@ The practical path is:
 
 The tooling plan is in [docs/tooling.md](tooling.md). The first reusable
 TriCube-specific schedule model is
-[`experiments/crypto-analysis/models/tricube_schedule.py`](../experiments/crypto-analysis/models/tricube_schedule.py).
+[`tests/crypto_analysis/models/tricube_schedule.py`](../tests/crypto_analysis/models/tricube_schedule.py).
 
 ## External Statistical Batteries
 
