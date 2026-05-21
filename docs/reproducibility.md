@@ -62,7 +62,12 @@ python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x -
 
 The `fast8x` stream variant is an experimental optimized path. It is not the
 default and does not replace the baseline stream. The ablation record explaining
-why it was added is in [tests/ablation_lab/](../tests/ablation_lab/).
+why it was added is in [tests/ablation_lab/](../tests/ablation_lab/). The
+public snapshot reports `fast8x` at 132.655 MiB/s on a 256 MiB stream run,
+compared with 69.796 MiB/s for the released baseline in the same harness. That
+is a same-machine comparison against the TriCube baseline, not a claim that
+`fast8x` has been competitively benchmarked against optimized SHA-2, SHA-3,
+BLAKE2, or BLAKE3 implementations.
 
 ## Development Screens
 

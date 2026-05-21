@@ -18,6 +18,11 @@ The current public repository includes:
 - TestU01 Crush PASS, 144/144;
 - Dieharder battery result of 109 PASS, 2 WEAK, and 0 FAIL;
 - PractRand 1 GiB WARN because of unresolved low-bit warnings;
+- experimental `fast8x` stream benchmark result of 132.655 MiB/s on a 256
+  MiB run, compared with 69.796 MiB/s for the released baseline in the same
+  ablation harness;
+- `fast8x` screening evidence through PractRand 1 GiB, SmokeRand express 7/7,
+  TestU01 SmallCrush 15/15, and 16 MiB internal sanity probes;
 - a first white-box word-dependency model showing full 32-lane dependency by
   round 2 at 64-bit lane granularity;
 - scripts for PractRand, Dieharder, TestU01, and NIST STS workflows.

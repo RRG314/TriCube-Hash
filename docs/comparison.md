@@ -36,4 +36,15 @@ That structure may or may not survive cryptanalytic review. The repository keeps
 - KangarooTwelve: https://keccak.team/kangarootwelve.html
 - CubeHash reference material: https://ehash.isec.tugraz.at/wiki/CubeHash.html
 
-The comparison status is incomplete until TriCube has a full benchmark set against optimized C implementations and independent cryptanalysis against the reduced-round and full-round construction.
+The current public benchmark comparison is intentionally narrower than a
+competitive hash-library shootout. The released TriCube stream path and the
+experimental `fast8x` stream path have been compared in the same C ablation
+harness: `fast8x` measured 132.655 MiB/s on a 256 MiB stream run, while the
+released baseline measured 69.796 MiB/s in that same run. The repo also reports
+internal controls and battery-screen results for `fast8x`.
+
+What remains incomplete is the broader comparison that would matter for public
+performance claims: optimized C implementations of SHA-256, SHA3/SHAKE,
+BLAKE2, BLAKE3, and other mature hash/XOF libraries on the same hardware, plus
+independent cryptanalysis against the reduced-round and full-round TriCube
+construction.

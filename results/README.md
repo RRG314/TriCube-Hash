@@ -12,4 +12,10 @@ The fast8x stream optimization is documented under
 explains why `fast8x` was added as an explicit experimental stream variant and
 why faster low-bit-warning variants were not promoted.
 
+The key fast8x throughput result is 132.655 MiB/s on a 256 MiB stream run,
+versus 69.796 MiB/s for the released TriCube baseline in the same C ablation
+harness. That is a baseline comparison inside the TriCube implementation
+family. Optimized SHA-2, SHA-3/SHAKE, BLAKE2, and BLAKE3 library comparisons
+remain future work.
+
 Large external-battery logs should normally be attached to releases or stored outside the main repository unless they are small enough and important enough to inspect directly.
