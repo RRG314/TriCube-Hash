@@ -142,11 +142,11 @@ python tests/crypto_analysis/screens/low_bit_diagnostics.py \
   --out tests/crypto_analysis/results/low-bit-latest
 ```
 
-If this screen misses a PractRand warning, PractRand takes priority. The internal diagnostic is a local microscope, not a replacement for a battery.
+If this screen misses a PractRand warning, PractRand takes priority. The local diagnostic is a microscope, not a replacement for a battery.
 
 ### White-Box Round-Model Analysis
 
-The black-box probes above observe output bytes. The current branch also
+The black-box probes above observe output bytes. The repository also
 contains a first white-box schedule analyzer:
 
 ```bash

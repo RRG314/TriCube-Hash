@@ -44,7 +44,7 @@ or state-recovery cryptanalysis.
 
 The compact screen outputs are generated locally under
 `tests/crypto_analysis/results/`. Those generated per-run folders are not
-committed to the public branch so the repository does not accumulate duplicate
+committed to the repository so it does not accumulate duplicate
 machine-specific result snapshots. Reproduce them with:
 
 ```bash

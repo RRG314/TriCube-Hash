@@ -1,6 +1,6 @@
 # Analysis Tooling
 
-TriCube should not grow a private cryptanalysis ecosystem when good public
+TriCube should not grow a custom cryptanalysis ecosystem when good public
 tools already exist. The custom part is the TriCube model: the 32-lane state,
 the 3 x 3 x 3 vertex mapping, tetrahedral schedule, edge coupling, shell
 coupling, lane permutation, constants, modes, padding, and output extraction.

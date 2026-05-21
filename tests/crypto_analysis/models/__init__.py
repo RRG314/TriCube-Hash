@@ -1,2 +1,1 @@
-"""TriCube-specific modeling helpers for private analysis scripts."""
-
+"""TriCube-specific modeling helpers for analysis scripts."""

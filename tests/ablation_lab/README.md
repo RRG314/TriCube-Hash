@@ -31,10 +31,10 @@ same Apple M4 Pro machine used for the May 2026 result refresh, it
 measured about `132.65 MiB/s` for a 256 MiB stream run, compared with about
 `69.80 MiB/s` for the released baseline in the same harness.
 
-After adding `fast8x` to this public branch, a smaller 64 MiB smoke benchmark
+After adding `fast8x` to the repository, a smaller 64 MiB smoke benchmark
 measured `130.94 MiB/s` for `fast8x` and `73.07 MiB/s` for the baseline. That
 run is recorded in
-[tables/branch_smoke_stream_bench.csv](tables/branch_smoke_stream_bench.csv).
+[tables/fast8x_stream_smoke_bench.csv](tables/fast8x_stream_smoke_bench.csv).
 
 The same ablation record lists `fast8x` as clean through:
 
@@ -91,7 +91,7 @@ The compact public tables are:
 - [tables/quality_gate_summary.csv](tables/quality_gate_summary.csv)
 - [tables/external_screen_summary.csv](tables/external_screen_summary.csv)
 - [tables/candidate_recommendations.csv](tables/candidate_recommendations.csv)
-- [tables/branch_smoke_stream_bench.csv](tables/branch_smoke_stream_bench.csv)
+- [tables/fast8x_stream_smoke_bench.csv](tables/fast8x_stream_smoke_bench.csv)
 
 Large generated streams, full terminal transcripts, and rejected C implementations are
-not included in this public branch.
+not included in the repository.

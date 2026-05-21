@@ -44,7 +44,7 @@ The scripts use deterministic pseudorandom sampling from the command seed
 
 ## What Runs Here
 
-`run_all_screens.py` runs the compact internal suite and writes one combined
+`run_all_screens.py` runs the compact suite and writes one combined
 summary. Each screen is also a separate script so reviewers can inspect and run
 one method at a time.
 
@@ -368,7 +368,8 @@ Each run writes:
 - `all_screens.csv` with every row in one compact table.
 
 Large raw streams and external battery logs are not stored here. External tools
-should write their own summaries under `results/` or a release artifact area.
+should write their summaries under `results/` or another documented results
+location.
 
 ## Status Labels
 

@@ -1,7 +1,7 @@
 # Paper
 
-`manuscript.md` is the tracked source manuscript for the current TriCube public-review draft. Figures and references used by the manuscript live in this folder.
+This folder contains TriCube manuscript materials.
 
-`TriCube_Short_Manuscript_2026-05-20.docx` is an intentionally tracked short-manuscript reviewer copy supplied for this branch.
-
-Other generated PDF and DOCX exports are release artifacts. They should be attached to GitHub releases when needed rather than tracked as source files in the repository.
+- `manuscript.md` is the source manuscript.
+- `TriCube_Short_Manuscript_2026-05-20.docx` is a short Word manuscript version.
+- `figures/` and `references.bib` contain supporting manuscript assets.

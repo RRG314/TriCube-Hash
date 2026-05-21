@@ -37,7 +37,7 @@ def run_screen(variants: list[str]) -> list[dict[str, Any]]:
                     "binary": binary,
                     "purpose": purpose,
                     "status": STATUS_NOT_RUN if exists else STATUS_BLOCKED,
-                    "notes": "tool detected but not launched by this quick internal run" if exists else "external tool not installed or not on PATH",
+                    "notes": "tool detected but not launched by this quick run" if exists else "external tool not installed or not on PATH",
                 }
             )
     return rows
@@ -56,4 +56,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

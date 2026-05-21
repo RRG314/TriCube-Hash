@@ -8,13 +8,13 @@ Independent Researcher  |  sreid1118@gmail.com
 
 May 20, 2026  |  Apple M4 Pro / macOS 15.5  •  Python 3.13/3.14  •  Apple clang 17.0.0
 
-SCOPE NOTICE: This is a preliminary public-review manuscript. Evidence consists of unit tests, internal benchmarks, black-box development probes, a first word-level white-box schedule model, and external statistical-battery results from local research runs. No wording constitutes a claim of cryptographic security. PractRand low-bit warnings remain unresolved and formal cryptanalysis remains future work.
+SCOPE NOTICE: This is a preliminary public-review manuscript. Evidence consists of unit tests, project benchmarks, black-box development probes, a first word-level white-box schedule model, and external statistical-battery results. No wording constitutes a claim of cryptographic security. PractRand low-bit warnings remain unresolved and formal cryptanalysis remains future work.
 
 ## Abstract
 
 We report the design and experimental evaluation of TriCube, a candidate hash function and extendable-output function (XOF) based on tetrahedral/cube-connected state evolution. The current public baseline uses a 2048-bit state with thirty-two 64-bit lanes. Twenty-seven lanes form a 3 × 3 × 3 vertex grid; five shell/global lanes provide additional global coupling. The eight cube cells of the grid are decomposed into six tetrahedra each, giving 48 tetrahedral neighborhoods per full pass. Each round combines local tetrahedral ARX mixing, grid-edge coupling, shell/global coupling, and a deterministic lane permutation.
 
-Evaluation covers unit tests and vector agreement, internal statistical benchmarks, black-box development probes, and external statistical batteries. The public baseline and the experimental fast8x stream variant are separated by domain tags and by API/CLI selection. The evidence supports continued review and engineering work; it does not establish collision resistance, preimage resistance, pseudorandomness, or security for deployment.
+Evaluation covers unit tests and vector agreement, project statistical benchmarks, black-box development probes, and external statistical batteries. The public baseline and the experimental fast8x stream variant are separated by domain tags and by API/CLI selection. The evidence supports continued review and engineering work; it does not establish collision resistance, preimage resistance, pseudorandomness, or security for deployment.
 
 Keywords: hash function, XOF, geometric primitive, tetrahedral decomposition, cube-connected state, sponge construction, PractRand, TestU01, black-box development probes
 
@@ -86,7 +86,7 @@ The Python package exposes tricube.hash, tricube.hexdigest, tricube.xof, tricube
 
 The experimental fast8x stream entry points are implemented as a named opt-in stream variant. They are domain-separated from the baseline and do not alter hash vectors, XOF vectors, or the default stream behavior. The shared permutation and fast8x profile live in c/src/tricube.c, while the public fast8x entry points are exposed through c/src/tricube_fast8x.c.
 
-The public repo is https://github.com/RRG314/tricube-hash. It intentionally excludes raw private archives, scratch scripts, private filesystem paths, and unpromoted high-speed variants that failed low-bit screens.
+The public repo is https://github.com/RRG314/tricube-hash. It excludes raw exploratory material, machine-specific paths, and unpromoted high-speed variants that failed low-bit screens.
 
 ## 5. Test Environment
 
@@ -127,7 +127,7 @@ The Python test suite verifies byte-level correctness against expected-output te
 
 ### 6.2 Internal Statistical Benchmark
 
-The internal benchmark measures throughput, byte entropy (Shannon H(X) over 256 byte values; maximum 8.000 bits/byte), bit balance, serial correlation at lag 1 (Pearson ρ₁), and avalanche mean across all variants. Preserved slow baseline paths were capped at 65,536 bytes; production paths were measured at 1,048,576 bytes.
+The project benchmark measures throughput, byte entropy (Shannon H(X) over 256 byte values; maximum 8.000 bits/byte), bit balance, serial correlation at lag 1 (Pearson ρ₁), and avalanche mean across all variants. Preserved slow baseline paths were capped at 65,536 bytes; production paths were measured at 1,048,576 bytes.
 
 | Generator | Status | Bytes | MiB/s | Entropy (bits/byte) | Bit Balance | Serial Corr ρ₁ | Avalanche | Rep. Blocks |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -167,9 +167,9 @@ Table 3. Throughput summary. The Python-candidate rows come from the original 10
 
 6.4 fast8x Stream Variant Update
 
-After the original May 2026 evaluation, a private ablation pass tested faster stream/XOF paths. The only optimized candidate added to this public branch is fast8x. It uses a separate stream domain tag, 8 initialization rounds, 4 per-block stream rounds, a 256-byte stream rate, and an additional TriCube-family output mixing layer. It must be requested explicitly with --variant fast8x.
+After the original May 2026 evaluation, an ablation pass tested faster stream/XOF paths. The optimized candidate included in the repository is fast8x. It uses a separate stream domain tag, 8 initialization rounds, 4 per-block stream rounds, a 256-byte stream rate, and an additional TriCube-family output mixing layer. It must be requested explicitly with --variant fast8x.
 
-In the ablation harness, fast8x measured 132.655 MiB/s on a 256 MiB stream run, compared with 69.796 MiB/s for the released baseline in the same harness. A later 64 MiB branch smoke run measured 130.940 MiB/s for fast8x and 73.067 MiB/s for the baseline. The ablation record lists fast8x as clean through PractRand 1 GiB, SmokeRand express 7/7, TestU01 SmallCrush 15/15, and 16 MiB internal sanity probes with no repeated 32-byte blocks.
+In the ablation harness, fast8x measured 132.655 MiB/s on a 256 MiB stream run, compared with 69.796 MiB/s for the released baseline in the same harness. A later 64 MiB smoke run measured 130.940 MiB/s for fast8x and 73.067 MiB/s for the baseline. The ablation record lists fast8x as clean through PractRand 1 GiB, SmokeRand express 7/7, TestU01 SmallCrush 15/15, and 16 MiB sanity probes with no repeated 32-byte blocks.
 
 Faster variants were not promoted. fast8x_batch reached 311.98 MiB/s but failed PractRand low-bit FPF checks; fast8x_wide reached 285.71 MiB/s but showed very suspicious low-bit rows; fast8x512 reached 230.74 MiB/s but had recurring low-bit warnings. The public rule is conservative: speed gains that introduce repeatable low-bit warnings do not get promoted.
 
@@ -241,7 +241,7 @@ Figure 4. Black-box development-probe dashboard. (a) Differential diffusion mean
 
 ### 7.6 White-Box Round-Model Check
 
-The branch now includes a first white-box schedule model in tests/crypto_analysis/screens/whitebox_round_model.py. Unlike the black-box probes, this script reads the specified tetrahedron, edge, shell, and lane-permutation rules directly. It tracks word-level dependency: which original 64-bit lanes can influence which later 64-bit lanes after each round.
+The repository now includes a first white-box schedule model in tests/crypto_analysis/screens/whitebox_round_model.py. Unlike the black-box probes, this script reads the specified tetrahedron, edge, shell, and lane-permutation rules directly. It tracks word-level dependency: which original 64-bit lanes can influence which later 64-bit lanes after each round.
 
 The 24-round local run reports 48 tetrahedral neighborhoods and 54 edge neighborhoods per round. At word granularity, all tracked state lanes reached full 32-lane dependency by round 2, and the first 32 output bytes also reached full 32-lane dependency by round 2. The same report records that shell vertex and opposite-lane schedules touch all 27 vertex lanes over the 24-round schedule period, and that edge and permutation layers use all rotation counts 1 through 61.
 
@@ -436,7 +436,7 @@ Unit tests:
 
 Internal statistical benchmark:
 
-.venv/bin/python benchmarks/bench_tricube.py --out-dir .../tricube_internal_refresh_2026-05-19
+.venv/bin/python benchmarks/bench_tricube.py --out-dir .../tricube_refresh_2026-05-19
 
 100 MiB stream benchmark:
 
@@ -460,7 +460,7 @@ Public summary artifacts are kept under results/ and tests/ablation_lab/ in the 
 
 | Artifact | Exists | Covers |
 | --- | --- | --- |
-| tricube_internal_refresh_2026-05-19 | yes | Section 6: Internal Benchmark |
+| tricube_refresh_2026-05-19 | yes | Section 6: Project Benchmark |
 | tricube_structural_gaps_standard_2026-05-19 | yes | Section 7.1: Structural Gap Checks |
 | tricube_attack_differential_standard_2026-05-19 | yes | Section 7.2: Black-box Differential Diffusion Probe |
 | tricube_attack_rotational_standard_2026-05-19 | yes | Section 7.2: Black-box Rotational Relation Probe |

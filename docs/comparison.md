@@ -41,7 +41,7 @@ competitive hash-library shootout. The released TriCube stream path and the
 experimental `fast8x` stream path have been compared in the same C ablation
 harness: `fast8x` measured 132.655 MiB/s on a 256 MiB stream run, while the
 released baseline measured 69.796 MiB/s in that same run. The repo also reports
-internal controls and battery-screen results for `fast8x`.
+project controls and battery-screen results for `fast8x`.
 
 What remains incomplete is the broader comparison that would matter for public
 performance claims: optimized C implementations of SHA-256, SHA3/SHAKE,

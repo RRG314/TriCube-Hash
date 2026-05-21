@@ -33,7 +33,8 @@ any other security-critical purpose.
 
 The optimized `fast8x` stream path is specified only as an experimental stream
 variant. Rejected ablation-lab variants such as `fast8x512`, `fast4x`, and
-other high-throughput candidates are not public baseline schemes in this branch.
+other high-throughput candidates are not public baseline schemes in this
+repository.
 
 ## 1.1 Diagrams
 
@@ -454,7 +455,7 @@ The CLI writes stream data in 1 MiB chunks, but chunking does not affect output.
 
 ## 11. Baseline vs Experimental Variants
 
-Only the baseline and `fast8x` are implemented in this branch.
+Only the baseline and `fast8x` are implemented in this repository.
 
 | Variant | Purpose | Init rounds | Step rounds | Output rate | Output layer | Status |
 |---|---|---:|---:|---:|---|---|
@@ -464,7 +465,7 @@ Only the baseline and `fast8x` are implemented in this branch.
 The `fast8x` variant is domain-separated with tag
 `TC-TETRA256-V2/STREAM/FAST8X`. It is available through the C API and CLI, but
 it does not replace the baseline. Faster ablation-lab variants are not public
-reference schemes in this branch.
+reference schemes in this repository.
 
 ## 12. Test Vectors
 

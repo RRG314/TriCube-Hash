@@ -108,7 +108,7 @@ See [docs/specification.md](docs/specification.md) for the exact construction an
 
 The following tables summarize the May 2026 validation evidence. These are engineering and statistical-screening results, not security proofs.
 
-The default stream path remains the released baseline. This branch also adds an
+The default stream path remains the released baseline. The repository also includes an
 experimental `fast8x` stream variant for external statistical testing. It is
 domain-separated from the baseline and must be requested explicitly with
 `--variant fast8x`. The ablation evidence for that choice is summarized in
@@ -200,7 +200,7 @@ See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the public notice table
 
 TriCube uses standard external statistical batteries where possible, and the
 next layer of formal analysis should use established solver and algebra systems
-rather than private ad hoc replacements. Z3, SageMath, CryptoMiniSat,
+rather than custom ad hoc replacements. Z3, SageMath, CryptoMiniSat,
 CLAASP/CryptoSMT-style frameworks, and related tooling are useful only after a
 verified TriCube reduced-round model exists. The custom work is the TriCube
 model; the search and solving machinery should come from well-understood tools.

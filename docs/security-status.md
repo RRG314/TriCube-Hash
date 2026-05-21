@@ -22,7 +22,7 @@ The current public repository includes:
   MiB run, compared with 69.796 MiB/s for the released baseline in the same
   ablation harness;
 - `fast8x` screening evidence through PractRand 1 GiB, SmokeRand express 7/7,
-  TestU01 SmallCrush 15/15, and 16 MiB internal sanity probes;
+  TestU01 SmallCrush 15/15, and 16 MiB sanity probes;
 - a first white-box word-dependency model showing full 32-lane dependency by
   round 2 at 64-bit lane granularity;
 - scripts for PractRand, Dieharder, TestU01, and NIST STS workflows.
@@ -53,7 +53,7 @@ PASS/WARN/FAIL/BLOCKED/NOT_RUN status labels.
 The open-source tooling plan is in [tooling.md](tooling.md). The intended path
 for deeper work is to build a verified reduced-round TriCube model and then use
 standard solvers and algebra systems such as Z3, SageMath, SAT solvers, and
-cryptanalysis frameworks where they fit. The repo does not treat private
+cryptanalysis frameworks where they fit. The repo does not treat custom
 black-box screens as substitutes for those tools.
 
 ## Unknowns
