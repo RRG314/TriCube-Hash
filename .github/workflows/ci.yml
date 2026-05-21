@@ -30,6 +30,10 @@ jobs:
       - name: Run Python tests
         run: pytest -q
 
+      - name: Run crypto-analysis quick screens
+        if: runner.os != 'Windows'
+        run: python tests/crypto_analysis/run_all_screens.py --profile quick --variants baseline,fast8x --out /tmp/tricube-quick
+
       - name: CLI smoke
         run: |
           python -m tricube.cli hash --hex 616263

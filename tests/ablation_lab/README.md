@@ -18,9 +18,9 @@ separate makes the evidence easier to read: this folder explains why `fast8x`
 was the only optimized variant carried forward, while `crypto_analysis`
 explains how the current screens are run and what they do not prove.
 
-The faster experimental paths are documented here but are not included in the
-public C API. They produced higher throughput by widening the extraction rate or
-batching output, but the strongest versions also produced low-bit PractRand
+The rejected high-speed paths are documented here but are not included in the
+public C API. They produced higher throughput by widening the extraction rate
+or batching output, but the strongest versions also produced low-bit PractRand
 warnings or failures. Those variants remain excluded until the failure mode is
 understood.
 

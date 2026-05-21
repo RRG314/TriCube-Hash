@@ -10,6 +10,8 @@ dist/
 c/build/
 results/tmp/
 tests/crypto_analysis/results/
+paper/*.docx
+paper/*.pdf
 *.bin
 *.o
 .DS_Store

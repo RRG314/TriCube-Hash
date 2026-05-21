@@ -476,6 +476,7 @@ These vectors are produced by the current C CLI.
 | Hash `abc` | `616263` | `779403a9c748fc3213493953fc17309367b37161c00dc19059c14db63774e11e` |
 | XOF `abc`, 64 bytes | `616263` | `6118c4b547c28533b968d6b7fc0b171817d8d9b1ced9e8c832dc7903e73baadcb6ce828c5f50d697bffddaef772c0b89d9314970df8cb5f15e95af6143e0667c` |
 | Baseline stream seed 123, first 64 bytes | seed `123` | `9ccace5701711cc2b47c06bf5a1a2b2b0bb5df09a8fb47a473ea18e34fef3695b7e233322a0b04a691402be1c630f070d954848a5c4013e8c745968288216d98` |
+| Experimental fast8x stream seed 123, first 64 bytes | seed `123`, `--variant fast8x` | `33d4d2da3afff406189a50b42322c03b2f1f9c411444d2b7347561fb9a882b3f4fcd0bbf306434b88a634e51d3f026e1466469adc8b688d4504f65355bb643ee` |
 
 The packaged vector file is `python/src/tricube/data/tricube_vectors.json`.
 

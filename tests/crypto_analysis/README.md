@@ -1,11 +1,8 @@
 # TriCube Crypto-Analysis Screens
 
-This folder contains the reproducible black-box development screens used to
-triage TriCube stream variants. The screens are intentionally named probes and
-screens because they are not formal cryptanalysis.
-
-These tests are development gates. They can find obvious failures or warning
-patterns, but they do not replace white-box cryptanalysis.
+This folder contains reproducible development screens for TriCube stream
+variants. They are named probes and screens because they are engineering gates
+for obvious failures and warning patterns, not formal cryptanalysis.
 
 ## What Runs Here
 

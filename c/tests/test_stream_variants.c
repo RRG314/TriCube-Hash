@@ -3,6 +3,17 @@
 #include <stdio.h>
 #include <string.h>
 
+static const uint8_t FAST8X_SEED123_FIRST64[64] = {
+    0x33, 0xd4, 0xd2, 0xda, 0x3a, 0xff, 0xf4, 0x06,
+    0x18, 0x9a, 0x50, 0xb4, 0x23, 0x22, 0xc0, 0x3b,
+    0x2f, 0x1f, 0x9c, 0x41, 0x14, 0x44, 0xd2, 0xb7,
+    0x34, 0x75, 0x61, 0xfb, 0x9a, 0x88, 0x2b, 0x3f,
+    0x4f, 0xcd, 0x0b, 0xbf, 0x30, 0x64, 0x34, 0xb8,
+    0x8a, 0x63, 0x4e, 0x51, 0xd3, 0xf0, 0x26, 0xe1,
+    0x46, 0x64, 0x69, 0xad, 0xc8, 0xb6, 0x88, 0xd4,
+    0x50, 0x4f, 0x65, 0x35, 0x5b, 0xb6, 0x43, 0xee
+};
+
 static int expect_distinct(const char *name, const uint8_t *a, const uint8_t *b, size_t n) {
     if (memcmp(a, b, n) == 0) {
         fprintf(stderr, "%s unexpectedly matched\n", name);
@@ -75,6 +86,10 @@ int main(void) {
     tricube_stream_seed_variant(123, fast8x, sizeof(fast8x), TRICUBE_STREAM_FAST8X);
     tricube_fast8x_stream_seed(123, fast8x_named, sizeof(fast8x_named));
     failures += expect_distinct("fast8x vs baseline", fast8x, baseline, sizeof(fast8x));
+    if (memcmp(fast8x, FAST8X_SEED123_FIRST64, sizeof(FAST8X_SEED123_FIRST64)) != 0) {
+        fprintf(stderr, "fast8x seed 123 first 64-byte vector changed\n");
+        failures++;
+    }
     if (memcmp(fast8x, fast8x_named, sizeof(fast8x)) != 0) {
         fprintf(stderr, "named fast8x entry point differs from stream variant\n");
         failures++;

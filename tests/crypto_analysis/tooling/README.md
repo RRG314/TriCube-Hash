@@ -11,7 +11,7 @@ The scripts are deliberately small:
   bit-vector equation.
 - `sage_smoke.py` verifies that SageMath can construct a small Boolean
   polynomial ring. Run it with Sage's Python.
-- `solver_model_todo.md` lists the TriCube-specific modeling work still needed
+- `solver_model_plan.md` lists the TriCube-specific modeling work still needed
   before solver results would mean anything.
 
 ## Commands

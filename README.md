@@ -210,22 +210,11 @@ The current probe definitions and limits are in [docs/testing.md](docs/testing.m
 
 ## Security Limitations
 
-TriCube is not secure for production use. The limitations are direct:
-
-- no security proof;
-- no independent cryptanalysis;
-- no collision-resistance or preimage-resistance claim;
-- incomplete formal reduced-round, differential, rotational, algebraic, and state-recovery analysis;
-- unresolved low-bit PractRand warnings;
-- no side-channel or constant-time review;
-- performance is not competitive with mature optimized hashes;
-- statistical batteries do not prove cryptographic security.
-
-See [docs/security-status.md](docs/security-status.md) and [docs/limitations.md](docs/limitations.md) for the full security boundary.
+TriCube is research-only. It still lacks independent cryptanalysis, formal reduced-round analysis, side-channel review, and complete long-run multi-seed battery campaigns. Statistical batteries and development probes are useful evidence, but they are not a security proof. See [docs/security-status.md](docs/security-status.md) and [docs/limitations.md](docs/limitations.md) for the full boundary.
 
 ## Paper and Citation
 
-The manuscript is in [paper/](paper/). It explains where TriCube came from, the current construction, the available evidence, and the analysis still required before stronger claims would be responsible.
+The source manuscript is [paper/manuscript.md](paper/manuscript.md). It explains where TriCube came from, the current construction, the available evidence, and the analysis still required before stronger claims would be responsible. Generated PDF and DOCX exports should be attached to releases rather than tracked as source files.
 
 If you use this repository in research, cite [CITATION.cff](CITATION.cff).
 
