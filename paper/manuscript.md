@@ -8,7 +8,7 @@ Independent Researcher  |  sreid1118@gmail.com
 
 May 20, 2026  |  Apple M4 Pro / macOS 15.5  •  Python 3.13/3.14  •  Apple clang 17.0.0
 
-SCOPE NOTICE: This is a preliminary public-review manuscript. Evidence consists of unit tests, internal benchmarks, black-box development probes, and external statistical-battery results from local research runs. No wording constitutes a claim of cryptographic security. PractRand low-bit warnings remain unresolved and formal cryptanalysis remains future work.
+SCOPE NOTICE: This is a preliminary public-review manuscript. Evidence consists of unit tests, internal benchmarks, black-box development probes, a first word-level white-box schedule model, and external statistical-battery results from local research runs. No wording constitutes a claim of cryptographic security. PractRand low-bit warnings remain unresolved and formal cryptanalysis remains future work.
 
 ## Abstract
 
@@ -38,6 +38,8 @@ CubeHash [5] is a close name-level comparison because it also uses cube language
 
 The current public TriCube baseline uses a 2048-bit state represented as thirty-two 64-bit words S[0] through S[31]. Lanes S[0] through S[26] are vertex lanes in a 3 × 3 × 3 grid. Coordinates x, y, z ∈ {0,1,2} map to lane index x + 3(y + 3z). Lanes S[27] through S[31] are shell/global lanes. They are state words used for global coupling and metadata mixing, not external entropy sources.
 
+![TriCube state layout](figures/state-layout.svg)
+
 All words are interpreted little-endian when absorbing or emitting bytes. All 64-bit additions are modulo 2^64. ROTL64(x, r) denotes a left rotation by r mod 64 bits.
 
 3.2 Tetrahedral Decomposition
@@ -46,9 +48,13 @@ The 3 × 3 × 3 vertex grid contains eight unit cube cells. For a cube at cell c
 
 Each cube cell is decomposed into six tetrahedral neighborhoods: (v0,v1,v3,v7), (v0,v3,v2,v7), (v0,v2,v6,v7), (v0,v6,v4,v7), (v0,v4,v5,v7), and (v0,v5,v1,v7). Across eight cube cells this gives 48 tetrahedral neighborhoods per full pass. The tetrahedra share vertices and are updated in a deterministic order, so the in-place update order is part of the construction.
 
+![TriCube tetrahedral decomposition](figures/tetrahedral-decomposition.svg)
+
 3.3 Round Function
 
 A TriCube round applies four layers in sequence: tetrahedral local mixing, grid-edge coupling, shell/global coupling, and lane permutation with constant injection. The implementation precomputes a 24-round schedule for speed, but the schedule is derived from the deterministic rules in docs/specification.md and must not change the public output.
+
+![TriCube round flow](figures/round-flow.svg)
 
 ```text
 for round r in 0..R-1:
@@ -110,6 +116,8 @@ Key reproduction commands:
 python benchmarks/bench_stream.py --bytes 104857600
 
 tools/run_practrand.sh 1073741824
+
+This manuscript keeps the main claim narrow. The body describes the construction and the strongest current evidence. Large command transcripts, raw battery logs, and generated tables belong in the repository artifacts rather than in the main paper.
 
 ## 6. Unit Tests and Internal Benchmarks
 
@@ -178,27 +186,27 @@ The following probes are black-box development screens using observable input/ou
 | sampled_near_collision_distance | PASS | 4,096 pairs; min/mean/max Δbits = 103/128.2/157 | 33.64 |
 | domain_tweak_separation | PASS | 5 tweaks; min pairwise Hamming = 121 | — |
 | bit_influence_spread | PASS | mean flip p = 0.5010; range 0.426–0.570 | — |
-| related_seed_stream_overlap | PASS | 4 streams × 262,144 blocks; 0 overlapping 32-byte blocks | 0.26 |
+| overlap_fork_stream_uniqueness | PASS | 4 streams × 262,144 blocks; 0 overlapping 32-byte blocks | 0.26 |
 
-Table 4. Structural gap checks. 20,000 collision pairs, 4,096 near-collision pairs, domain separation, low-weight inputs, and related-seed overlap — all PASS.
+Table 4. Structural gap checks. 20,000 collision pairs, 4,096 near-collision pairs, domain separation, low-weight inputs, and overlap/fork stream uniqueness checks all returned PASS under the tested budget.
 
-### 7.2 Black-Box Differential and Black-Box Rotational Probes
+### 7.2 Black-Box Differential Diffusion and Rotational Relation Probes
 
 | Status | Cases | Mean Δbits Range | Max Output-bit Bias | Repeated Diffs | Elapsed (s) |
 | --- | --- | --- | --- | --- | --- |
 | PASS | 36 | 127.704–128.348 | 0.042969 | 0 | 386.5 s |
 
-Table 5. Black-box differential probe (36 cases, 6 delta patterns × 6 round counts, 2,048 samples each). Mean output difference was 127.7–128.3 bits, max bias was 0.043, and no repeated differences were observed. This is a black-box development screen, not trail-based differential cryptanalysis.
+Table 5. Black-box differential diffusion probe (36 cases, 6 delta patterns × 6 round counts, 2,048 samples each). Mean output difference was 127.7–128.3 bits, max bias was 0.043, and no repeated differences were observed. This is a black-box development screen, not trail-based differential cryptanalysis.
 
 | Status | Cases | Mean Rot. Dist. Range | Exact Rot. Relations | Elapsed (s) |
 | --- | --- | --- | --- | --- |
 | PASS | 36 | 127.570–128.284 | 0 | 393.8 s |
 
-Table 6. Black-box rotational probe (36 cases, 6 rotation amounts × 6 round counts, 2,048 samples each). Mean rotational distance stayed near 128.0, and no exact rotational relations were observed. This is not formal rotational cryptanalysis.
+Table 6. Black-box rotational relation probe (36 cases, 6 rotation amounts × 6 round counts, 2,048 samples each). Mean rotational distance stayed near 128.0, and no exact rotational relations were observed. This is not formal rotational cryptanalysis.
 
-### 7.3 Small Black-Box Algebraic Screen
+### 7.3 Small Black-Box Algebraic Degree Screen
 
-The small black-box algebraic screen estimates sampled Boolean degree over 10 input variables for selected output bits. It is intended to catch obvious low-degree behavior. It does not perform SAT, MILP, Gröbner-basis analysis, full ANF extraction, or invariant cryptanalysis.
+The small black-box algebraic degree screen estimates sampled Boolean degree over 10 input variables for selected output bits. It is intended to catch obvious low-degree behavior. It does not perform SAT, MILP, Gröbner-basis analysis, full ANF extraction, or invariant cryptanalysis.
 
 | Rounds | Vars | Out Bits | Status | Min Degree | Mean Degree | Max Degree | Low-deg Outputs | Elapsed (s) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -209,27 +217,35 @@ The small black-box algebraic screen estimates sampled Boolean degree over 10 in
 | 12 | 10 | 128 | PASS | 9 | 9.523 | 10 | 0 | 3.20 |
 | 16 | 10 | 128 | PASS | 9 | 9.359 | 10 | 0 | 4.04 |
 
-Table 7. Small black-box algebraic screen at six round counts. Sampled ANF degree was near the 10-variable ceiling at all tested rounds; zero low-degree sampled outputs were detected. This does not replace formal algebraic cryptanalysis.
+Table 7. Small black-box algebraic degree screen at six round counts. Sampled ANF degree was near the 10-variable ceiling at all tested rounds; zero low-degree sampled outputs were detected. This does not replace formal algebraic cryptanalysis.
 
-### 7.4 Overlap/Fork and State-Recovery Probes
+### 7.4 Overlap/Fork Stream Uniqueness and State-Recovery/Predictability Screens
 
 | Status | Streams | Bytes/Stream | Block Size | Blocks Tested | Overlaps | Mean Pfx Hamming | Elapsed (s) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | PASS | 4 | 4,194,304 | 32 B | 524,288 | 0 | 4,074 bits | 0.49 s |
 
-Table 8. Overlap/fork probe. No overlapping 32-byte blocks across 4 streams × 524,288 blocks.
+Table 8. Overlap/fork stream uniqueness screen. No overlapping 32-byte blocks across 4 streams × 524,288 blocks.
 
 | Status | Train Bytes | Test Bytes | Next-byte Acc. | Bit Accuracy | BM LC Ratio | Elapsed (s) |
 | --- | --- | --- | --- | --- | --- | --- |
 | PASS | 2,097,152 | 2,097,152 | 0.00396 | 0.50009 | 0.5000 | 7.35 s |
 
-Table 9. State-recovery screen. Next-byte accuracy (0.00396) is at chance (1/256 ≈ 0.00391). BM linear complexity ratio 0.5000, consistent with a non-linear sequence.
+Table 9. Black-box state-recovery/predictability screen. Next-byte accuracy (0.00396) is at chance (1/256 ≈ 0.00391). BM linear complexity ratio 0.5000, consistent with a non-linear sequence.
 
 ### 7.5 Reduced-Round Combined Probe
 
-A combined reduced-round screen ran the black-box differential and rotational probes across 72 cases and six round counts. All 72 cases returned PASS under the tested budget. This result is useful triage evidence, but it does not bound reduced-round attack complexity.
+A combined reduced-round screen ran the black-box differential diffusion and black-box rotational relation probes across 72 cases and six round counts. All 72 cases returned PASS under the tested budget. This result is useful triage evidence, but it does not bound reduced-round attack complexity.
 
-Figure 4. Black-box development-probe dashboard. (a) Differential mean Δbits, all near ideal 128.0. (b) Rotational mean distance, all near 128.0, zero exact relations. (c) sampled ANF degree vs. rounds, near variable count 10. (d) state-recovery screen near chance baselines.
+Figure 4. Black-box development-probe dashboard. (a) Differential diffusion mean Δbits, all near ideal 128.0. (b) Rotational relation distance, all near 128.0, zero exact relations. (c) sampled ANF degree vs. rounds, near variable count 10. (d) black-box state-recovery/predictability screen near chance baselines.
+
+### 7.6 White-Box Round-Model Check
+
+The branch now includes a first white-box schedule model in experiments/crypto-analysis/whitebox_round_model.py. Unlike the black-box probes, this script reads the specified tetrahedron, edge, shell, and lane-permutation rules directly. It tracks word-level dependency: which original 64-bit lanes can influence which later 64-bit lanes after each round.
+
+The 24-round local run reports 48 tetrahedral neighborhoods and 54 edge neighborhoods per round. At word granularity, all tracked state lanes reached full 32-lane dependency by round 2, and the first 32 output bytes also reached full 32-lane dependency by round 2. The same report records that shell vertex and opposite-lane schedules touch all 27 vertex lanes over the 24-round schedule period, and that edge and permutation layers use all rotation counts 1 through 61.
+
+This is useful schedule evidence. It is not a differential trail search, rotational analysis, algebraic model, SAT/MILP result, or state-recovery attack. It only says that the current schedule gives broad word-level reachability quickly.
 
 ## 8. External Statistical Battery Evaluation
 
@@ -326,23 +342,29 @@ The evidence explicitly does not support: cryptographic security of any kind; cl
 
 ### 9.2 Design Observations and Open Questions
 
-The geometric approach is of intellectual interest because tetrahedral mixing and edge-coupling provide a different local interaction pattern than the uniform G-function of BLAKE or Keccak's bitwise permutation, potentially producing a different algebraic structure. Whether that structure is harder or easier to attack is unknown. The NS3 anomalies are a concrete hint: if the edge-coupling pass — which XORs rotated words — does not propagate low-bit differences uniformly, the rotation constants may need targeted recalibration for low-bit diffusion. The primary engineering weaknesses are the unoptimized C implementation (no SIMD, unbenchmarked natively), the SIGPIPE harness classification ambiguity, and the absence of a formal algorithmic specification enabling independent reimplementation.
+The geometric approach is of intellectual interest because tetrahedral mixing and edge-coupling provide a different local interaction pattern than the uniform G-function of BLAKE or Keccak's bitwise permutation, potentially producing a different algebraic structure. Whether that structure is harder or easier to attack is unknown. The NS3 anomalies are a concrete hint: if the edge-coupling pass — which XORs rotated words — does not propagate low-bit differences uniformly, the rotation constants may need targeted recalibration for low-bit diffusion. The primary engineering weaknesses are performance below mature optimized hash libraries, the need for independent reimplementation from the specification, and the absence of formal white-box cryptanalysis beyond the current word-level schedule model.
 
 ## 10. Future Work
 
-The following items are required before any strengthened claim can be made, ordered by priority:
+The next work is deliberately narrower than the list of possible cryptanalytic tasks.
 
-PractRand low-bit investigation: Repeat the 1 GiB run across ≥3 seeds. Apply a targeted low-bit diagnostic isolating the lowest output bit plane. Extend to 10 GiB. If anomalies persist, audit the edge-coupling rotation constants for low-bit diffusion deficiency.
+Formal cryptanalysis should be built on standard tooling rather than custom ad
+hoc tests. Candidate tools include Z3 or related SMT solvers, SAT solvers such
+as CryptoMiniSat, SageMath for small Boolean-polynomial experiments, and
+ARX-oriented frameworks such as CLAASP, CryptoSMT, or ArxPy where TriCube's
+nonstandard tetrahedral schedule can be represented correctly. The required
+custom component is a verified reduced-round TriCube model, not a replacement
+for the solver and algebra systems themselves.
 
-Formal differential trail analysis: Model the round function and compute maximum differential probability per round. Bound the number of rounds required to defeat differential cryptanalysis.
+First, the PractRand low-bit warning needs a multi-seed campaign. The correct next run is at least three seeds at 10 GiB or more, followed by focused low-bit diagnostics if the NS3 pattern repeats.
 
-Algebraic/SAT attack: Model the round function in a SAT or MILP solver and attempt reduced-round collisions and preimage attacks.
+Second, the new word-level schedule model should be extended into a reduced-round white-box program. That program should model modular-addition differences, rotation propagation, and output extraction well enough to search for high-probability differential trails. Until that exists, the current differential diffusion probe remains only a black-box development gate.
 
-White-box state-recovery: Attempt internal-state reconstruction from observed output using knowledge of the exact state transition function.
+Third, algebraic work should start with reduced-round Boolean or word-level encodings. A useful first target is not a full attack; it is a verified SAT, SMT, or MILP model that reproduces known reduced-round input/output behavior and can then search for collisions, preimages, invariants, or impossible states at small round counts.
 
-Independent specification review: Implement TriCube from docs/specification.md without reading c/src/tricube.c, compare against vectors, and identify any ambiguity in the public specification.
+Fourth, the specification should receive an independent implementation test. A reviewer should implement TriCube from docs/specification.md without reading c/src/tricube.c, then compare against the fixed vectors and report any ambiguity.
 
-Optimized native implementation and comparative benchmarking: continue optimizing the C implementation while preserving vectors, and benchmark against BLAKE3, SHA-256, SHA-512, and SHA-3 under equivalent conditions.
+Finally, engineering work should continue on the C implementation and benchmark it against BLAKE3, SHA-256, SHA-512, and SHA-3 under equivalent conditions. Speed improvements that reintroduce low-bit warnings should remain excluded.
 
 ## 11. Conclusion
 
@@ -398,9 +420,11 @@ Data and code availability: The source code and result artifacts are maintained 
 
 [19] Courtois & Pieprzyk. Cryptanalysis of Block Ciphers with Overdefined Systems. ASIACRYPT 2002.
 
-[20] NIST. SP 800-232: Ascon-Based Lightweight Cryptography Standards for Constrained Devices. 2025.
+[20] Khovratovich & Nikolic. Rotational Cryptanalysis of ARX. FSE 2010.
 
-[21] Dobraunig, Eichlseder, Mendel, and Schläffer. Ascon v1.2: Lightweight Authenticated Encryption and Hashing. Journal of Cryptology, 2021.
+[21] NIST. SP 800-232: Ascon-Based Lightweight Cryptography Standards for Constrained Devices. 2025.
+
+[22] Dobraunig, Eichlseder, Mendel, and Schläffer. Ascon v1.2: Lightweight Authenticated Encryption and Hashing. Journal of Cryptology, 2021.
 
 ## Appendix A: Reproduction Command Index
 
@@ -426,7 +450,7 @@ PractRand 1 GiB:
 
 tools/run_practrand.sh 1073741824
 
-Differential / rotational / algebraic / overlap-fork / state-recovery / reduced-round probes:
+Differential diffusion / rotational relation / algebraic degree / overlap-fork uniqueness / state-recovery-predictability / reduced-round probes:
 
 Probe scripts from the original archive must be cleaned before inclusion; public summaries are in docs/testing.md and results/consolidated-results-2026-05-19.md.
 
@@ -438,11 +462,11 @@ Public summary artifacts are kept under results/ and experiments/ablation-lab/ i
 | --- | --- | --- |
 | tricube_internal_refresh_2026-05-19 | yes | Section 6: Internal Benchmark |
 | tricube_structural_gaps_standard_2026-05-19 | yes | Section 7.1: Structural Gap Checks |
-| tricube_attack_differential_standard_2026-05-19 | yes | Section 7.2: Black-box Differential Probe |
-| tricube_attack_rotational_standard_2026-05-19 | yes | Section 7.2: Black-box Rotational Probe |
-| tricube_attack_algebraic_standard_2026-05-19 | yes | Section 7.3: Small Black-box Algebraic Screen |
-| tricube_attack_overlap_fork_standard_2026-05-19 | yes | Section 7.4: Overlap/Fork Probe |
-| tricube_attack_state_recovery_standard_2026-05-19 | yes | Section 7.4: State-Recovery Screen |
+| tricube_attack_differential_standard_2026-05-19 | yes | Section 7.2: Black-box Differential Diffusion Probe |
+| tricube_attack_rotational_standard_2026-05-19 | yes | Section 7.2: Black-box Rotational Relation Probe |
+| tricube_attack_algebraic_standard_2026-05-19 | yes | Section 7.3: Small Black-box Algebraic Degree Screen |
+| tricube_attack_overlap_fork_standard_2026-05-19 | yes | Section 7.4: Overlap/Fork Stream Uniqueness Screen |
+| tricube_attack_state_recovery_standard_2026-05-19 | yes | Section 7.4: Black-Box State-Recovery/Predictability Screen |
 | tricube_attack_reduced_round_standard_2026-05-19 | yes | Section 7.5: Reduced-Round Probe |
 | manual_dieharder_1tb_full-e7244043.log | yes | Section 8.1: Full Dieharder (109P/2W/0F) |
 | crush_stdout-89028ed3.txt | yes | Section 8.2: TestU01 Crush — 144 tests passed |

@@ -16,6 +16,13 @@ The primitive is specified in [docs/specification.md](docs/specification.md). Th
 
 The security boundary is in [docs/security-status.md](docs/security-status.md). TriCube has black-box development probes and statistical-battery results, but it does not have formal differential, rotational, algebraic, or reduced-round cryptanalysis. The terms used in this repository are deliberately narrow: a probe or screen is an engineering check for obvious failures, not a security proof.
 
+The reproducible black-box screen suite is in
+[experiments/crypto-analysis/](experiments/crypto-analysis/). It records the
+exact command, branch, commit, machine, seed, byte count, and status labels for
+each compact run. The same folder also contains a first white-box round-model
+analyzer that checks word-level schedule dependency and coverage without
+claiming formal cryptanalysis.
+
 ## Quick Start
 
 Build and test the C implementation:
@@ -89,6 +96,10 @@ TriCube uses 32 lanes of 64 bits each. Twenty-seven lanes correspond to a 3 x 3 
 
 Input bytes are absorbed with domain separation and length encoding. Digest mode squeezes 32 bytes. XOF mode squeezes an arbitrary number of bytes. Stream mode initializes from a seed and emits deterministic blocks for statistical testing.
 
+The diagrams in [docs/specification.md](docs/specification.md) show the state
+layout, tetrahedral decomposition, and round flow. The diagrams are explanatory;
+the tables and pseudocode in the specification are the normative source.
+
 The candidate novelty is the cube/tetrahedral state evolution and propagation schedule. It is not the use of hashing, XOFs, ARX operations, or sponge-like absorb/squeeze structure, all of which are established design families.
 
 See [docs/specification.md](docs/specification.md) for the exact construction and [docs/design.md](docs/design.md) for a shorter design overview.
@@ -122,11 +133,11 @@ domain-separated from the baseline and must be requested explicitly with
 | Truncated birthday collision checks | PASS | 16/24/32/48/64-bit prefix collision counts were close to birthday expectation under practical sample sizes. |
 | Full-digest collision smoke | PASS | 0 full digest collisions and 0 prefix64 collisions over 20,000 sampled messages. |
 | Message-bit diffusion | PASS | 16-round mean changed bits: 127.819 of 256 over 8,192 samples. |
-| Black-box differential probe | PASS | Across tested deltas and rounds, mean changed bits stayed near 128; no repeated output differences were observed. |
-| Black-box rotational probe | PASS | No exact rotational relation was observed; mean rotational distances stayed near 128 bits. |
+| Black-box differential diffusion probe | PASS | Across tested deltas and rounds, mean changed bits stayed near 128; no repeated output differences were observed. |
+| Black-box rotational relation probe | PASS | No exact rotational relation was observed; mean rotational distances stayed near 128 bits. |
 | Domain/tweak separation | PASS | 5/5 unique digests; minimum hamming distance from default case was 121 bits. |
-| State-recovery screen | PASS | Next-byte prediction accuracy 0.00396061, near the random baseline of 1/256. |
-| Overlap/fork stream test | PASS | 0 repeated 32-byte block overlaps across 4 streams and 262,144 tested blocks. |
+| Black-box state-recovery/predictability screen | PASS | Next-byte prediction accuracy 0.00396061, near the random baseline of 1/256. |
+| Overlap/fork stream uniqueness screen | PASS | 0 repeated 32-byte block overlaps across 4 streams and 262,144 tested blocks. |
 
 These probes are development gates. They do not search differential trails, bound differential probabilities, prove resistance to rotational distinguishers, perform SAT/MILP or Gröbner-basis analysis, or prove state-recovery resistance. See [docs/testing.md](docs/testing.md) for the exact meaning of each probe.
 
@@ -184,6 +195,18 @@ TriCube does not bundle SmokeRand, PractRand, Dieharder, TestU01, NIST STS, or
 third-party hash implementations. The scripts in `tools/` assume those
 programs are installed separately and used under their own upstream licenses.
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the public notice table.
+
+## Analysis Tooling
+
+TriCube uses standard external statistical batteries where possible, and the
+next layer of formal analysis should use established solver and algebra systems
+rather than private ad hoc replacements. Z3, SageMath, CryptoMiniSat,
+CLAASP/CryptoSMT-style frameworks, and related tooling are useful only after a
+verified TriCube reduced-round model exists. The custom work is the TriCube
+model; the search and solving machinery should come from well-understood tools.
+
+The tool plan and optional setup checks are in [docs/tooling.md](docs/tooling.md).
+The current probe definitions and limits are in [docs/testing.md](docs/testing.md).
 
 ## Security Limitations
 

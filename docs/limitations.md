@@ -25,15 +25,24 @@ TriCube is not ready for security use. The current project should be treated as 
 - Formal differential trail analysis is incomplete.
 - Formal rotational-distinguisher analysis is incomplete.
 - Algebraic structure analysis is incomplete.
+- The current white-box work is limited to word-level schedule dependency and
+  does not yet provide SAT, MILP, SMT, Gröbner, or trail-search results.
+- The specification is now written as the normative description, but it still
+  needs an independent clean-room implementation to prove that a reviewer can
+  implement it without reading `c/src/tricube.c`.
 - Birthday collision experiments are small relative to cryptographic claims.
 - Long multi-seed PractRand, TestU01 Crush reruns, TestU01 BigCrush, larger NIST STS, and SmokeRand full campaigns remain open.
 
 ## Terminology Correction
 
-Earlier project notes used phrases such as differential probes, rotational
-probes, and algebraic screens. These are intentionally named probes/screens
-because they are not formal cryptanalysis. They are black-box development
-checks intended to find obvious failures before deeper analysis. Formal
-differential, rotational, and algebraic cryptanalysis remains future work.
+Earlier project notes used shorter phrases such as differential probes,
+rotational probes, and algebraic screens. The public documentation now uses
+more precise names: black-box differential diffusion probe, black-box
+rotational relation probe, small black-box algebraic degree screen,
+collision/birthday sanity check, overlap/fork stream uniqueness screen,
+black-box state-recovery/predictability screen, and low-bit diagnostic screen.
+These are development gates intended to find obvious failures before deeper
+analysis. Formal differential, rotational, algebraic, collision, and
+state-recovery cryptanalysis remains future work.
 
 These limitations are intentional in the public documentation. They prevent the project from implying a stronger security status than the evidence supports.

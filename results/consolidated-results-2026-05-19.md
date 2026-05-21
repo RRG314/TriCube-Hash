@@ -18,6 +18,54 @@ See `experiments/ablation-lab/` for the compact public ablation record. This
 update is performance and statistical-screening evidence only; it does not
 establish cryptographic security.
 
+## 2026-05-20 Probe/Screens Reproducibility Update
+
+The black-box development probes have been moved from result-only descriptions
+into a reproducible screen suite under `experiments/crypto-analysis/`. The
+suite uses precise names for each screen: black-box differential diffusion
+probe, black-box rotational relation probe, small black-box algebraic degree
+screen, collision/birthday sanity check, near-collision sanity check,
+overlap/fork stream uniqueness screen, black-box state-recovery/predictability
+screen, and low-bit diagnostic screen.
+
+The latest quick profile compared `baseline` and `fast8x` with the same
+stream-output interface and produced `78 PASS` rows and `10 BLOCKED` external
+battery rows. The blocked rows are missing-tool markers for PractRand,
+SmokeRand, TestU01, Dieharder, and NIST STS in this local shell; they are not
+statistical failures. The standalone 16 MiB low-bit diagnostic run produced
+`2 PASS` rows, one for `baseline` and one for `fast8x`.
+
+A first white-box round-model analysis was also added. It models the specified
+tetrahedron, edge, shell, and permutation schedule at 64-bit lane granularity.
+In the 24-round local run, all tracked lanes and the first 32 output bytes
+reached full 32-lane word dependency by round 2. This is useful schedule
+coverage evidence, but it is not bit-level differential, rotational, algebraic,
+or state-recovery cryptanalysis.
+
+The compact screen outputs are generated locally under
+`experiments/crypto-analysis/results/`. Those generated per-run folders are not
+committed to the public branch so the repository does not accumulate duplicate
+machine-specific result snapshots. Reproduce them with:
+
+```bash
+python3 experiments/crypto-analysis/run_all_screens.py \
+  --profile quick \
+  --variants baseline,fast8x \
+  --out experiments/crypto-analysis/results/quick-latest
+
+python3 experiments/crypto-analysis/low_bit_diagnostics.py \
+  --variants baseline,fast8x \
+  --bytes 16777216 \
+  --out experiments/crypto-analysis/results/low-bit-latest
+
+python3 experiments/crypto-analysis/whitebox_round_model.py \
+  --rounds 24 \
+  --out experiments/crypto-analysis/results/whitebox-latest
+```
+
+These screens are development gates. They can find obvious failures or warning
+patterns, but they do not replace white-box cryptanalysis.
+
 ## Environment
 
 | Item | Value |
@@ -75,19 +123,20 @@ This is a WARN result. It should drive follow-up testing, not be treated as a cl
 | Full digest collision smoke | PASS | 0 full digest collisions and 0 prefix64 collisions over 20,000 sampled messages. |
 | Diffusion, 12 rounds | PASS | Mean changed bits 128.027 of 256; stdev 7.981; min 99; max 156. |
 | Diffusion, 16 rounds | PASS | Mean changed bits 127.819 of 256; stdev 7.950; min 95; max 152. |
-| Black-box differential probe | PASS | Tested deltas across 1, 2, 4, 8, 12, and 16 rounds; no repeated output differences observed. |
-| Black-box rotational probe | PASS | Tested rotations 1, 7, 8, 13, 16, and 32 across 1, 2, 4, 8, 12, and 16 rounds; mean rotational distances stayed near 128 bits. |
-| Small black-box algebraic screen | PASS | Sampled ANF screen reached max degree 10 for sampled 10-variable cases across tested rounds. |
+| Black-box differential diffusion probe | PASS | Tested deltas across 1, 2, 4, 8, 12, and 16 rounds; no repeated output differences observed. |
+| Black-box rotational relation probe | PASS | Tested rotations 1, 7, 8, 13, 16, and 32 across 1, 2, 4, 8, 12, and 16 rounds; mean rotational distances stayed near 128 bits. |
+| Small black-box algebraic degree screen | PASS | Sampled ANF screen reached max degree 10 for sampled 10-variable cases across tested rounds. |
 | Domain/tweak separation | PASS | 5 unique digests; minimum hamming distance from default case was 121 bits. |
 | Bit influence spread | PASS | Mean output flip rate 0.5009918; min 0.425781; max 0.570312. |
-| State-recovery screen | PASS | Next-byte prediction accuracy 0.00396061; bit accuracy 0.500095; linear-complexity ratio 0.5. |
-| Related-seed overlap/fork test | PASS | 0 repeated 32-byte block overlaps across 4 streams and 262,144 tested blocks. |
+| Black-box state-recovery/predictability screen | PASS | Next-byte prediction accuracy 0.00396061; bit accuracy 0.500095; linear-complexity ratio 0.5. |
+| Overlap/fork stream uniqueness screen | PASS | 0 repeated 32-byte block overlaps across 4 streams and 262,144 tested blocks. |
 
 These probes are development gates. They can find obvious problems, but they do
-not replace cryptanalysis. The black-box differential probe does not search
-trails or bound differential probability. The rotational probe does not prove
-resistance to rotational distinguishers. The algebraic screen does not perform
-SAT, MILP, Gröbner-basis, full ANF, or invariant analysis.
+not replace cryptanalysis. The black-box differential diffusion probe does not
+search trails or bound differential probability. The black-box rotational
+relation probe does not prove resistance to rotational distinguishers. The
+small black-box algebraic degree screen does not perform SAT, MILP,
+Gröbner-basis, full ANF, or invariant analysis.
 
 ## Performance
 

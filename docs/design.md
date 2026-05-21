@@ -6,6 +6,8 @@ This document describes the current public construction. It does not claim that 
 
 ## State Model
 
+![TriCube state layout](figures/state-layout.svg)
+
 The internal state has 32 lanes of 64 bits each, for a total of 2048 bits.
 
 Twenty-seven lanes are interpreted as the vertices of a 3 x 3 x 3 grid. That grid contains eight unit cube cells. Each cube cell has eight vertices. The remaining five lanes are shell lanes used to carry length, domain, and global coupling information.
@@ -19,6 +21,8 @@ index(x, y, z) = x + 3 * (y + 3 * z)
 where each coordinate is in `{0, 1, 2}`.
 
 ## Tetrahedral Decomposition
+
+![TriCube tetrahedral decomposition](figures/tetrahedral-decomposition.svg)
 
 Each cube cell is decomposed into six tetrahedra. For a cube with local vertices numbered from 0 to 7, the local tetrahedra are:
 
@@ -36,6 +40,8 @@ The full 2 x 2 x 2 block therefore has 48 tetrahedral mixing groups.
 This tetrahedral decomposition is the main structural distinction from a flat ARX hash. It gives the round function a fixed geometric neighborhood schedule: local tetrahedral mixing, edge propagation, shell coupling, and then a global permutation.
 
 ## Round Function
+
+![TriCube round flow](figures/round-flow.svg)
 
 A TriCube round applies four steps:
 

@@ -9,6 +9,15 @@ keeps only the result that passed the current screening threshold:
   per-block rounds, a 256-byte stream rate, and an additional TriCube-family
   output mixer.
 
+The ablation lab is about speed and variant selection. The reproducible
+black-box development probes for differential diffusion, rotational relations,
+algebraic degree, collision/birthday behavior, overlap/fork uniqueness,
+predictability, and low-bit diagnostics live separately in
+[experiments/crypto-analysis/](../crypto-analysis/). Keeping those two folders
+separate makes the evidence easier to read: this folder explains why `fast8x`
+was the only optimized variant carried forward, while `crypto-analysis`
+explains how the current screens are run and what they do not prove.
+
 The faster experimental paths are documented here but are not included in the
 public C API. They produced higher throughput by widening the extraction rate or
 batching output, but the strongest versions also produced low-bit PractRand
