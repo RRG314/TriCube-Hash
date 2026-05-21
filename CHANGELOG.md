@@ -17,6 +17,8 @@ Branch updates preparing the experimental `fast8x` stream path for review.
   SHA-3/SHAKE, BLAKE2, and BLAKE3 library comparisons remain future work.
 - Treat `paper/manuscript.md` as the tracked paper source and keep generated
   PDF/DOCX exports as release artifacts rather than source files.
+- Added an intentionally tracked short-manuscript DOCX reviewer copy under
+  `paper/`.
 
 ## 0.1.0 - 2026-05-19
 
