@@ -4,7 +4,7 @@ project(tricube C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_library(tricube_core src/tricube.c src/tricube_fast8x.c)
+add_library(tricube_core src/tricube.c src/tricube_variants.c src/tricube_fast8x.c)
 target_include_directories(tricube_core PUBLIC include)
 target_link_libraries(tricube_core PUBLIC m)
 

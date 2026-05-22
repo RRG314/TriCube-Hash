@@ -18,6 +18,7 @@
 #include <time.h>
 
 #include "tricube.h"
+#include "tricube_internal.h"
 
 #define TC_STATE_WORDS 32
 #define TC_STATE_BITS (TC_STATE_WORDS * 64)
@@ -505,74 +506,9 @@ static void squeeze_rate64_xmix_feedback(uint64_t state[TC_STATE_WORDS], uint64_
     }
 }
 
-typedef struct hash_profile {
-    tricube_hash_variant variant;
-    const char *name;
-    const uint8_t *domain;
-    size_t domain_len;
-    size_t group_bytes;
-    int group_rounds;
-    int final_rounds;
-    int squeeze_rounds;
-} hash_profile;
-
-/*
- * Hash profiles keep the baseline and experimental hash candidates separate
- * without duplicating the round function. The variant-specific behavior is the
- * absorb grouping schedule and domain tag: each profile absorbs 64-byte blocks
- * with the same absorb function, then applies group_rounds after group_bytes
- * have been processed. Finalization and output extraction remain shared.
- */
-static const uint8_t TRICUBE_DEFAULT_DOMAIN_BYTES[] = "TC-TETRA256-" "V" "2";
-static const uint8_t HASH_DOMAIN_FAST1024[] = "TC-TETRA256-" "V" "2/HASH/G1024-R8-F16";
-static const uint8_t HASH_DOMAIN_FAST1024R6[] = "TC-TETRA256-" "V" "2/HASH/G1024-R6-F16";
-
-static const hash_profile HASH_PROFILES[] = {
-    {TRICUBE_HASH_BASELINE, "baseline", TRICUBE_DEFAULT_DOMAIN_BYTES, sizeof(TRICUBE_DEFAULT_DOMAIN_BYTES) - 1U,
-     TC_BLOCK_BYTES, 8, TRICUBE_DEFAULT_ROUNDS, 8},
-    {TRICUBE_HASHFAST1024, "hashfast1024", HASH_DOMAIN_FAST1024, sizeof(HASH_DOMAIN_FAST1024) - 1U,
-     1024, 8, 16, 8},
-    {TRICUBE_HASHFAST1024R6, "hashfast1024r6", HASH_DOMAIN_FAST1024R6, sizeof(HASH_DOMAIN_FAST1024R6) - 1U,
-     1024, 6, 16, 8},
-};
-
-static const hash_profile *hash_profile_for_variant(tricube_hash_variant variant) {
-    for (size_t i = 0; i < sizeof(HASH_PROFILES) / sizeof(HASH_PROFILES[0]); i++) {
-        if (HASH_PROFILES[i].variant == variant) {
-            return &HASH_PROFILES[i];
-        }
-    }
-    return NULL;
-}
-
-const char *tricube_hash_variant_name(tricube_hash_variant variant) {
-    const hash_profile *profile = hash_profile_for_variant(variant);
-    return profile == NULL ? NULL : profile->name;
-}
-
-int tricube_hash_variant_from_name(const char *name, tricube_hash_variant *variant) {
-    if (name == NULL || variant == NULL) {
-        return TRICUBE_ERR_INVALID_ARGUMENT;
-    }
-    if (strcmp(name, "baseline") == 0 || strcmp(name, "default") == 0 || strcmp(name, "released") == 0) {
-        *variant = TRICUBE_HASH_BASELINE;
-        return TRICUBE_OK;
-    }
-    if (strcmp(name, "hashfast1024") == 0 || strcmp(name, "g1024_r8_f16") == 0) {
-        *variant = TRICUBE_HASHFAST1024;
-        return TRICUBE_OK;
-    }
-    if (strcmp(name, "hashfast1024r6") == 0 || strcmp(name, "hashfast1024-r6") == 0 ||
-        strcmp(name, "g1024_r6_f16") == 0) {
-        *variant = TRICUBE_HASHFAST1024R6;
-        return TRICUBE_OK;
-    }
-    return TRICUBE_ERR_INVALID_ARGUMENT;
-}
-
 static void tricube_hash_core_profile(const uint8_t *data, size_t data_len, uint8_t *out, size_t outlen,
-                                      const hash_profile *profile, const uint8_t *tweak, size_t tweak_len,
-                                      size_t encoded_outlen) {
+                                      const tricube_hash_profile *profile, const uint8_t *tweak,
+                                      size_t tweak_len, size_t encoded_outlen) {
     uint64_t state[TC_STATE_WORDS];
     uint64_t block_index = 0;
     if (!use_default_hash32_state(state, profile->domain, profile->domain_len, tweak, tweak_len, encoded_outlen)) {
@@ -639,79 +575,7 @@ static void seed_to_tweak(uint64_t seed, uint8_t out[16]) {
     write_le64(out, seed);
 }
 
-typedef struct stream_profile {
-    tricube_stream_variant variant;
-    const char *name;
-    const uint8_t *domain;
-    size_t domain_len;
-    int init_rounds;
-    int step_rounds;
-    size_t rate_bytes;
-    int extractor;
-} stream_profile;
-
-static const uint8_t STREAM_DOMAIN_BASELINE[] = "TC-TETRA256-" "V" "2/STREAM";
-static const uint8_t STREAM_DOMAIN_FAST8X[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X";
-static const uint8_t STREAM_DOMAIN_FAST8X384MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X384MIX";
-static const uint8_t STREAM_DOMAIN_FAST8X512MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X512MIX";
-static const uint8_t STREAM_DOMAIN_FAST8X768MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X768MIX";
-static const uint8_t STREAM_DOMAIN_FAST8X1024MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X1024MIX";
-
-static const stream_profile STREAM_PROFILES[] = {
-    {TRICUBE_STREAM_BASELINE, "baseline", STREAM_DOMAIN_BASELINE, sizeof(STREAM_DOMAIN_BASELINE) - 1U, 12, 6, TC_RATE_BYTES, 0},
-    {TRICUBE_STREAM_FAST8X, "fast8x", STREAM_DOMAIN_FAST8X, sizeof(STREAM_DOMAIN_FAST8X) - 1U, 8, 4, 256, 1},
-    {TRICUBE_STREAM_FAST8X384MIX, "fast8x384mix", STREAM_DOMAIN_FAST8X384MIX, sizeof(STREAM_DOMAIN_FAST8X384MIX) - 1U, 8, 4, 384, 2},
-    {TRICUBE_STREAM_FAST8X512MIX, "fast8x512mix", STREAM_DOMAIN_FAST8X512MIX, sizeof(STREAM_DOMAIN_FAST8X512MIX) - 1U, 8, 4, 512, 2},
-    {TRICUBE_STREAM_FAST8X768MIX, "fast8x768mix", STREAM_DOMAIN_FAST8X768MIX, sizeof(STREAM_DOMAIN_FAST8X768MIX) - 1U, 8, 4, 768, 2},
-    {TRICUBE_STREAM_FAST8X1024MIX, "fast8x1024mix", STREAM_DOMAIN_FAST8X1024MIX, sizeof(STREAM_DOMAIN_FAST8X1024MIX) - 1U, 8, 4, 1024, 2},
-};
-
-static const stream_profile *stream_profile_for_variant(tricube_stream_variant variant) {
-    for (size_t i = 0; i < sizeof(STREAM_PROFILES) / sizeof(STREAM_PROFILES[0]); i++) {
-        if (STREAM_PROFILES[i].variant == variant) {
-            return &STREAM_PROFILES[i];
-        }
-    }
-    return NULL;
-}
-
-const char *tricube_stream_variant_name(tricube_stream_variant variant) {
-    const stream_profile *profile = stream_profile_for_variant(variant);
-    return profile == NULL ? NULL : profile->name;
-}
-
-int tricube_stream_variant_from_name(const char *name, tricube_stream_variant *variant) {
-    if (name == NULL || variant == NULL) {
-        return TRICUBE_ERR_INVALID_ARGUMENT;
-    }
-    if (strcmp(name, "baseline") == 0 || strcmp(name, "default") == 0 || strcmp(name, "released") == 0) {
-        *variant = TRICUBE_STREAM_BASELINE;
-        return TRICUBE_OK;
-    }
-    if (strcmp(name, "fast8x") == 0 || strcmp(name, "rounds8x") == 0 || strcmp(name, "r8x") == 0) {
-        *variant = TRICUBE_STREAM_FAST8X;
-        return TRICUBE_OK;
-    }
-    if (strcmp(name, "fast8x384mix") == 0 || strcmp(name, "fast8x384") == 0 || strcmp(name, "r8x384") == 0) {
-        *variant = TRICUBE_STREAM_FAST8X384MIX;
-        return TRICUBE_OK;
-    }
-    if (strcmp(name, "fast8x512mix") == 0 || strcmp(name, "fast8x512") == 0 || strcmp(name, "r8x512") == 0) {
-        *variant = TRICUBE_STREAM_FAST8X512MIX;
-        return TRICUBE_OK;
-    }
-    if (strcmp(name, "fast8x768mix") == 0 || strcmp(name, "fast8x768") == 0 || strcmp(name, "r8x768") == 0) {
-        *variant = TRICUBE_STREAM_FAST8X768MIX;
-        return TRICUBE_OK;
-    }
-    if (strcmp(name, "fast8x1024mix") == 0 || strcmp(name, "fast8x1024") == 0 || strcmp(name, "r8x1024") == 0) {
-        *variant = TRICUBE_STREAM_FAST8X1024MIX;
-        return TRICUBE_OK;
-    }
-    return TRICUBE_ERR_INVALID_ARGUMENT;
-}
-
-static void stream_init_state(uint64_t state[TC_STATE_WORDS], uint64_t seed, const stream_profile *profile) {
+static void stream_init_state(uint64_t state[TC_STATE_WORDS], uint64_t seed, const tricube_stream_profile *profile) {
     uint8_t seed_bytes[16];
     seed_to_tweak(seed, seed_bytes);
     init_state(state, profile->domain, profile->domain_len, seed_bytes, sizeof(seed_bytes), 64);
@@ -719,7 +583,7 @@ static void stream_init_state(uint64_t state[TC_STATE_WORDS], uint64_t seed, con
     permute64(state, profile->init_rounds);
 }
 
-static void stream_fill_bytes(uint64_t state[TC_STATE_WORDS], uint64_t seed, const stream_profile *profile,
+static void stream_fill_bytes(uint64_t state[TC_STATE_WORDS], uint64_t seed, const tricube_stream_profile *profile,
                               uint64_t *counter, uint8_t *out, size_t n_bytes) {
     size_t pos = 0;
     while (pos < n_bytes) {
@@ -747,7 +611,8 @@ static void stream_fill_bytes(uint64_t state[TC_STATE_WORDS], uint64_t seed, con
     }
 }
 
-static int write_stream_profile(FILE *out, uint64_t seed, uint64_t n_bytes, size_t block_size, const stream_profile *profile) {
+static int write_stream_profile(FILE *out, uint64_t seed, uint64_t n_bytes, size_t block_size,
+                                const tricube_stream_profile *profile) {
     uint64_t state[TC_STATE_WORDS];
     uint8_t *block = NULL;
     uint64_t counter = 0;
@@ -777,7 +642,8 @@ static int write_stream_profile(FILE *out, uint64_t seed, uint64_t n_bytes, size
     return 0;
 }
 
-static int write_stream_profile_unbounded(FILE *out, uint64_t seed, size_t block_size, const stream_profile *profile) {
+static int write_stream_profile_unbounded(FILE *out, uint64_t seed, size_t block_size,
+                                          const tricube_stream_profile *profile) {
     uint64_t state[TC_STATE_WORDS];
     uint8_t *block = NULL;
     uint64_t counter = 0;
@@ -799,7 +665,7 @@ static int write_stream_profile_unbounded(FILE *out, uint64_t seed, size_t block
     }
 }
 
-static int stream_seed_profile(uint64_t seed, uint8_t *out, size_t n_bytes, const stream_profile *profile) {
+static int stream_seed_profile(uint64_t seed, uint8_t *out, size_t n_bytes, const tricube_stream_profile *profile) {
     if (n_bytes != 0 && out == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
@@ -820,7 +686,7 @@ int tricube_hash(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGES
 
 int tricube_xof_with_variant(const uint8_t *data, size_t data_len, uint8_t *out, size_t out_len,
                              tricube_hash_variant variant) {
-    const hash_profile *profile = hash_profile_for_variant(variant);
+    const tricube_hash_profile *profile = tricube_hash_profile_for_variant(variant);
     if (profile == NULL || (data_len != 0 && data == NULL) || (out_len != 0 && out == NULL)) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
@@ -830,7 +696,7 @@ int tricube_xof_with_variant(const uint8_t *data, size_t data_len, uint8_t *out,
 
 int tricube_hash_with_variant(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGEST_BYTES],
                               tricube_hash_variant variant) {
-    const hash_profile *profile = hash_profile_for_variant(variant);
+    const tricube_hash_profile *profile = tricube_hash_profile_for_variant(variant);
     if (profile == NULL || (data_len != 0 && data == NULL) || out == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
@@ -843,7 +709,7 @@ int tricube_stream_seed(uint64_t seed, uint8_t *out, size_t n_bytes) {
 }
 
 int tricube_stream_seed_variant(uint64_t seed, uint8_t *out, size_t n_bytes, tricube_stream_variant variant) {
-    const stream_profile *profile = stream_profile_for_variant(variant);
+    const tricube_stream_profile *profile = tricube_stream_profile_for_variant(variant);
     if (profile == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
@@ -858,7 +724,7 @@ int tricube_stream_write_variant(FILE *out, uint64_t seed, uint64_t n_bytes, tri
     if (out == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
-    const stream_profile *profile = stream_profile_for_variant(variant);
+    const tricube_stream_profile *profile = tricube_stream_profile_for_variant(variant);
     if (profile == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
@@ -870,7 +736,7 @@ int tricube_stream_write_unbounded(FILE *out, uint64_t seed, tricube_stream_vari
     if (out == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
-    const stream_profile *profile = stream_profile_for_variant(variant);
+    const tricube_stream_profile *profile = tricube_stream_profile_for_variant(variant);
     if (profile == NULL) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }

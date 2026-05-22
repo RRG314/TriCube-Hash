@@ -6,6 +6,9 @@ Updates preparing the experimental `fast8x` stream path for review.
 
 - Added experimental hash candidates `hashfast1024` and `hashfast1024r6` as
   opt-in C hash/XOF variants with separate domain tags.
+- Moved hash and stream variant profile tables into `c/src/tricube_variants.c`
+  so reviewers can inspect supported modes without digging through the core
+  round-function implementation.
 - Added C vector coverage for the experimental hash variants and a C API hash
   benchmark target for baseline-vs-hashfast comparisons.
 - Added a C `digest-stream` CLI mode for external digest-concatenation battery
