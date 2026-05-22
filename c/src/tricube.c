@@ -367,11 +367,6 @@ static void permute64(uint64_t state[TC_STATE_WORDS], int rounds) {
     }
 }
 
-static int half_rounds(int rounds) {
-    int half = rounds / 2;
-    return half > 6 ? half : 6;
-}
-
 static void init_state(uint64_t state[TC_STATE_WORDS], const uint8_t *domain, size_t domain_len,
                        const uint8_t *tweak, size_t tweak_len, uint32_t outlen) {
     static const uint8_t prefix[] = "TriCube-Tetra256-" "v" "2-native";
@@ -510,27 +505,98 @@ static void squeeze_rate64_xmix_feedback(uint64_t state[TC_STATE_WORDS], uint64_
     }
 }
 
-static void tricube_hash_core(const uint8_t *data, size_t data_len, uint8_t *out, size_t outlen,
-                      const uint8_t *domain, size_t domain_len, const uint8_t *tweak, size_t tweak_len,
-                      size_t encoded_outlen, int rounds) {
+typedef struct hash_profile {
+    tricube_hash_variant variant;
+    const char *name;
+    const uint8_t *domain;
+    size_t domain_len;
+    size_t group_bytes;
+    int group_rounds;
+    int final_rounds;
+    int squeeze_rounds;
+} hash_profile;
+
+/*
+ * Hash profiles keep the baseline and experimental hash candidates separate
+ * without duplicating the round function. The variant-specific behavior is the
+ * absorb grouping schedule and domain tag: each profile absorbs 64-byte blocks
+ * with the same absorb function, then applies group_rounds after group_bytes
+ * have been processed. Finalization and output extraction remain shared.
+ */
+static const uint8_t TRICUBE_DEFAULT_DOMAIN_BYTES[] = "TC-TETRA256-" "V" "2";
+static const uint8_t HASH_DOMAIN_FAST1024[] = "TC-TETRA256-" "V" "2/HASH/G1024-R8-F16";
+static const uint8_t HASH_DOMAIN_FAST1024R6[] = "TC-TETRA256-" "V" "2/HASH/G1024-R6-F16";
+
+static const hash_profile HASH_PROFILES[] = {
+    {TRICUBE_HASH_BASELINE, "baseline", TRICUBE_DEFAULT_DOMAIN_BYTES, sizeof(TRICUBE_DEFAULT_DOMAIN_BYTES) - 1U,
+     TC_BLOCK_BYTES, 8, TRICUBE_DEFAULT_ROUNDS, 8},
+    {TRICUBE_HASHFAST1024, "hashfast1024", HASH_DOMAIN_FAST1024, sizeof(HASH_DOMAIN_FAST1024) - 1U,
+     1024, 8, 16, 8},
+    {TRICUBE_HASHFAST1024R6, "hashfast1024r6", HASH_DOMAIN_FAST1024R6, sizeof(HASH_DOMAIN_FAST1024R6) - 1U,
+     1024, 6, 16, 8},
+};
+
+static const hash_profile *hash_profile_for_variant(tricube_hash_variant variant) {
+    for (size_t i = 0; i < sizeof(HASH_PROFILES) / sizeof(HASH_PROFILES[0]); i++) {
+        if (HASH_PROFILES[i].variant == variant) {
+            return &HASH_PROFILES[i];
+        }
+    }
+    return NULL;
+}
+
+const char *tricube_hash_variant_name(tricube_hash_variant variant) {
+    const hash_profile *profile = hash_profile_for_variant(variant);
+    return profile == NULL ? NULL : profile->name;
+}
+
+int tricube_hash_variant_from_name(const char *name, tricube_hash_variant *variant) {
+    if (name == NULL || variant == NULL) {
+        return TRICUBE_ERR_INVALID_ARGUMENT;
+    }
+    if (strcmp(name, "baseline") == 0 || strcmp(name, "default") == 0 || strcmp(name, "released") == 0) {
+        *variant = TRICUBE_HASH_BASELINE;
+        return TRICUBE_OK;
+    }
+    if (strcmp(name, "hashfast1024") == 0 || strcmp(name, "g1024_r8_f16") == 0) {
+        *variant = TRICUBE_HASHFAST1024;
+        return TRICUBE_OK;
+    }
+    if (strcmp(name, "hashfast1024r6") == 0 || strcmp(name, "hashfast1024-r6") == 0 ||
+        strcmp(name, "g1024_r6_f16") == 0) {
+        *variant = TRICUBE_HASHFAST1024R6;
+        return TRICUBE_OK;
+    }
+    return TRICUBE_ERR_INVALID_ARGUMENT;
+}
+
+static void tricube_hash_core_profile(const uint8_t *data, size_t data_len, uint8_t *out, size_t outlen,
+                                      const hash_profile *profile, const uint8_t *tweak, size_t tweak_len,
+                                      size_t encoded_outlen) {
     uint64_t state[TC_STATE_WORDS];
     uint64_t block_index = 0;
-    if (!use_default_hash32_state(state, domain, domain_len, tweak, tweak_len, encoded_outlen)) {
-        init_state(state, domain, domain_len, tweak, tweak_len, (uint32_t)encoded_outlen);
+    if (!use_default_hash32_state(state, profile->domain, profile->domain_len, tweak, tweak_len, encoded_outlen)) {
+        init_state(state, profile->domain, profile->domain_len, tweak, tweak_len, (uint32_t)encoded_outlen);
     }
     if (data_len == 0) {
         uint8_t empty_block[9] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0};
         absorb_bytes(state, empty_block, sizeof(empty_block), block_index);
-        permute64(state, half_rounds(rounds));
+        permute64(state, profile->group_rounds);
     } else {
-        for (size_t off = 0; off < data_len; off += TC_BLOCK_BYTES) {
-            size_t take = data_len - off;
-            if (take > TC_BLOCK_BYTES) {
-                take = TC_BLOCK_BYTES;
+        for (size_t group_off = 0; group_off < data_len; group_off += profile->group_bytes) {
+            size_t group_end = group_off + profile->group_bytes;
+            if (group_end < group_off || group_end > data_len) {
+                group_end = data_len;
             }
-            absorb_bytes(state, data + off, take, block_index);
-            permute64(state, half_rounds(rounds));
-            block_index++;
+            for (size_t off = group_off; off < group_end; off += TC_BLOCK_BYTES) {
+                size_t take = group_end - off;
+                if (take > TC_BLOCK_BYTES) {
+                    take = TC_BLOCK_BYTES;
+                }
+                absorb_bytes(state, data + off, take, block_index);
+                block_index++;
+            }
+            permute64(state, profile->group_rounds);
         }
     }
 
@@ -541,7 +607,7 @@ static void tricube_hash_core(const uint8_t *data, size_t data_len, uint8_t *out
     write_le_u64_to_buf(trailer + 24, block_index);
     trailer[32] = 0x80;
     absorb_bytes(state, trailer, sizeof(trailer), block_index + 1U);
-    permute64(state, rounds);
+    permute64(state, profile->final_rounds);
 
     size_t pos = 0;
     uint64_t counter = 0;
@@ -563,7 +629,7 @@ static void tricube_hash_core(const uint8_t *data, size_t data_len, uint8_t *out
                 counter ^ UINT64_C(0xA5A5A5A5A5A5A5A5),
             };
             absorb_words(state, words, 4, block_index + counter + 2U);
-            permute64(state, half_rounds(rounds));
+            permute64(state, profile->squeeze_rounds);
         }
     }
 }
@@ -744,27 +810,31 @@ static int stream_seed_profile(uint64_t seed, uint8_t *out, size_t n_bytes, cons
     return TRICUBE_OK;
 }
 
-
-
-static const uint8_t TRICUBE_DEFAULT_DOMAIN_BYTES[] = "TC-TETRA256-" "V" "2";
-
 int tricube_xof(const uint8_t *data, size_t data_len, uint8_t *out, size_t out_len) {
-    if ((data_len != 0 && data == NULL) || (out_len != 0 && out == NULL)) {
-        return TRICUBE_ERR_INVALID_ARGUMENT;
-    }
-    tricube_hash_core(data, data_len, out, out_len,
-                      TRICUBE_DEFAULT_DOMAIN_BYTES, sizeof(TRICUBE_DEFAULT_DOMAIN_BYTES) - 1U,
-                      NULL, 0, 0, TRICUBE_DEFAULT_ROUNDS);
-    return TRICUBE_OK;
+    return tricube_xof_with_variant(data, data_len, out, out_len, TRICUBE_HASH_BASELINE);
 }
 
 int tricube_hash(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGEST_BYTES]) {
-    if ((data_len != 0 && data == NULL) || out == NULL) {
+    return tricube_hash_with_variant(data, data_len, out, TRICUBE_HASH_BASELINE);
+}
+
+int tricube_xof_with_variant(const uint8_t *data, size_t data_len, uint8_t *out, size_t out_len,
+                             tricube_hash_variant variant) {
+    const hash_profile *profile = hash_profile_for_variant(variant);
+    if (profile == NULL || (data_len != 0 && data == NULL) || (out_len != 0 && out == NULL)) {
         return TRICUBE_ERR_INVALID_ARGUMENT;
     }
-    tricube_hash_core(data, data_len, out, TRICUBE_DIGEST_BYTES,
-                      TRICUBE_DEFAULT_DOMAIN_BYTES, sizeof(TRICUBE_DEFAULT_DOMAIN_BYTES) - 1U,
-                      NULL, 0, TRICUBE_DIGEST_BYTES, TRICUBE_DEFAULT_ROUNDS);
+    tricube_hash_core_profile(data, data_len, out, out_len, profile, NULL, 0, 0);
+    return TRICUBE_OK;
+}
+
+int tricube_hash_with_variant(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGEST_BYTES],
+                              tricube_hash_variant variant) {
+    const hash_profile *profile = hash_profile_for_variant(variant);
+    if (profile == NULL || (data_len != 0 && data == NULL) || out == NULL) {
+        return TRICUBE_ERR_INVALID_ARGUMENT;
+    }
+    tricube_hash_core_profile(data, data_len, out, TRICUBE_DIGEST_BYTES, profile, NULL, 0, TRICUBE_DIGEST_BYTES);
     return TRICUBE_OK;
 }
 

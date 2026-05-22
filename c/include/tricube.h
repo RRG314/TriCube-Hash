@@ -25,6 +25,14 @@ typedef enum tricube_stream_variant {
     TRICUBE_STREAM_FAST8X1024MIX = 5
 } tricube_stream_variant;
 
+typedef enum tricube_hash_variant {
+    TRICUBE_HASH_BASELINE = 0,
+    /* Experimental wide-group hash candidates. These are opt-in research
+       modes and do not replace the baseline hash/XOF path. */
+    TRICUBE_HASHFAST1024 = 1,
+    TRICUBE_HASHFAST1024R6 = 2
+} tricube_hash_variant;
+
 enum {
     TRICUBE_OK = 0,
     TRICUBE_ERR_INVALID_ARGUMENT = 1,
@@ -47,6 +55,12 @@ typedef struct tricube_ctx {
 int tricube_hash(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGEST_BYTES]);
 int tricube_hexdigest(const uint8_t *data, size_t data_len, char out_hex[TRICUBE_HEX_BYTES]);
 int tricube_xof(const uint8_t *data, size_t data_len, uint8_t *out, size_t out_len);
+int tricube_hash_with_variant(const uint8_t *data, size_t data_len, uint8_t out[TRICUBE_DIGEST_BYTES],
+                              tricube_hash_variant variant);
+int tricube_xof_with_variant(const uint8_t *data, size_t data_len, uint8_t *out, size_t out_len,
+                             tricube_hash_variant variant);
+const char *tricube_hash_variant_name(tricube_hash_variant variant);
+int tricube_hash_variant_from_name(const char *name, tricube_hash_variant *variant);
 
 int tricube_init(tricube_ctx *ctx);
 int tricube_update(tricube_ctx *ctx, const uint8_t *data, size_t data_len);

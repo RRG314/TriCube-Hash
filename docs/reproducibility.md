@@ -55,10 +55,19 @@ The C and Python implementations should agree on the fixed vectors.
 
 ```bash
 python benchmarks/bench_hash_sizes.py --quick
+make -C c build/bench_hash_variants
+c/build/bench_hash_variants --quick
 python benchmarks/bench_throughput.py --quick
 python benchmarks/bench_stream.py --bytes 1048576 --variants baseline,fast8x,fast8x1024mix
 python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x,fast8x512mix,fast8x768mix,fast8x1024mix --skip-python
 ```
+
+The C `bench_hash_variants` target measures the baseline hash path and the
+experimental `hashfast1024` and `hashfast1024r6` candidates through the C API,
+without Python or CLI startup overhead. The current local result is about
+273.188 MiB/s for `hashfast1024` and 343.013 MiB/s for `hashfast1024r6` on
+16 MiB messages, compared with about 20.178 MiB/s for the baseline. These are
+long-message engineering results, not security evidence.
 
 The `fast8x` and `fast8x*mix` stream variants are experimental optimized paths.
 They are not the default and do not replace the baseline stream. The ablation
@@ -89,6 +98,11 @@ python tests/crypto_analysis/screens/low_bit_diagnostics.py \
 python tests/crypto_analysis/screens/whitebox_round_model.py \
   --rounds 24 \
   --out tests/crypto_analysis/results/whitebox-latest
+
+python tests/crypto_analysis/hash_mode/run_hash_screens.py \
+  --profile quick \
+  --implementations baseline_hash,hashfast1024,hashfast1024r6 \
+  --out tests/crypto_analysis/results/hash-quick-latest
 ```
 
 These screens write compact JSON, Markdown, and CSV summaries. They do not

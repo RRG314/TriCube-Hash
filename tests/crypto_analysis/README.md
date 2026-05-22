@@ -35,9 +35,10 @@ c/build/tricube hash --hex MESSAGE_HEX
 ```
 
 Those screens are intentionally separate so stream results are not used as
-evidence for hash-mode behavior. The current public hash implementation is
-listed as `baseline_hash`; faster hash prototypes should only be added after
-they have fixed vectors, specification text, and external battery results.
+evidence for hash-mode behavior. The current implementations are
+`baseline_hash`, `hashfast1024`, and `hashfast1024r6`. The `hashfast` entries
+are experimental opt-in candidates with fixed vectors and separate domain tags;
+they do not replace the baseline hash/XOF path.
 
 The quick and standard profiles use the following budgets.
 
@@ -85,7 +86,7 @@ Hash-mode quick profile:
 ```bash
 python tests/crypto_analysis/hash_mode/run_hash_screens.py \
   --profile quick \
-  --implementations baseline_hash \
+  --implementations baseline_hash,hashfast1024,hashfast1024r6 \
   --out tests/crypto_analysis/results/hash-quick-latest
 ```
 
@@ -361,12 +362,12 @@ their output source is `tricube_hash()`, not stream bytes.
 
 | Hash-mode screen | Command |
 |---|---|
-| All hash-mode screens | `python tests/crypto_analysis/hash_mode/run_hash_screens.py --profile quick --implementations baseline_hash --out tests/crypto_analysis/results/hash-quick-latest` |
-| Hash differential diffusion | `python tests/crypto_analysis/hash_mode/differential_hash_screen.py --implementations baseline_hash --samples 64 --out tests/crypto_analysis/results/hash-differential-latest` |
-| Hash rotational relation | `python tests/crypto_analysis/hash_mode/rotational_hash_screen.py --implementations baseline_hash --samples 64 --out tests/crypto_analysis/results/hash-rotational-latest` |
-| Hash algebraic degree | `python tests/crypto_analysis/hash_mode/algebraic_hash_screen.py --implementations baseline_hash --variables 8 --output-bits 32 --out tests/crypto_analysis/results/hash-algebraic-latest` |
-| Hash collision and birthday | `python tests/crypto_analysis/hash_mode/collision_hash_screen.py --implementations baseline_hash --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/hash-collision-latest` |
-| Hash low-bit diagnostics | `python tests/crypto_analysis/hash_mode/low_bit_hash_screen.py --implementations baseline_hash --samples 4096 --out tests/crypto_analysis/results/hash-low-bit-latest` |
+| All hash-mode screens | `python tests/crypto_analysis/hash_mode/run_hash_screens.py --profile quick --implementations baseline_hash,hashfast1024,hashfast1024r6 --out tests/crypto_analysis/results/hash-quick-latest` |
+| Hash differential diffusion | `python tests/crypto_analysis/hash_mode/differential_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 64 --out tests/crypto_analysis/results/hash-differential-latest` |
+| Hash rotational relation | `python tests/crypto_analysis/hash_mode/rotational_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 64 --out tests/crypto_analysis/results/hash-rotational-latest` |
+| Hash algebraic degree | `python tests/crypto_analysis/hash_mode/algebraic_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --variables 8 --output-bits 32 --out tests/crypto_analysis/results/hash-algebraic-latest` |
+| Hash collision and birthday | `python tests/crypto_analysis/hash_mode/collision_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/hash-collision-latest` |
+| Hash low-bit diagnostics | `python tests/crypto_analysis/hash_mode/low_bit_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 4096 --out tests/crypto_analysis/results/hash-low-bit-latest` |
 
 Low-bit diagnostics at 16 MiB per variant:
 

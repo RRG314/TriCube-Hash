@@ -229,18 +229,18 @@ exercise the public C digest path:
 c/build/tricube hash --hex MESSAGE_HEX
 ```
 
-The current public implementation is named `baseline_hash` in these scripts.
-This name is deliberately separate from stream variants such as `fast8x` and
-`fast8x1024mix`. A faster hash prototype should only appear here after it has
-fixed vectors, a specification entry, and enough external testing to justify a
-public experimental status.
+The current implementations are `baseline_hash`, `hashfast1024`, and
+`hashfast1024r6`. These names are deliberately separate from stream variants
+such as `fast8x` and `fast8x1024mix`. The `hashfast` entries are experimental
+opt-in candidates with separate domain tags and fixed C vectors; they do not
+replace the baseline hash/XOF path.
 
 Run the hash-mode quick profile:
 
 ```bash
 python tests/crypto_analysis/hash_mode/run_hash_screens.py \
   --profile quick \
-  --implementations baseline_hash \
+  --implementations baseline_hash,hashfast1024,hashfast1024r6 \
   --out tests/crypto_analysis/results/hash-quick-latest
 ```
 
@@ -254,10 +254,11 @@ stream output.
 For external batteries over concatenated digests, use:
 
 ```bash
-python tests/crypto_analysis/hash_mode/digest_stream.py \
-  --implementation baseline_hash \
+c/build/tricube digest-stream \
+  --variant hashfast1024 \
   --seed 123 \
-  --messages 1048576 \
+  --messages 524288 \
+  --message-bytes 64 \
   --out -
 ```
 

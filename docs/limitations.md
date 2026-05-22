@@ -14,7 +14,14 @@ TriCube is not ready for security use. The current project should be treated as 
 
 ## Engineering Limitations
 
-- The C implementation is portable C11 but not heavily optimized for hash mode.
+- The C implementation is portable C11. The baseline hash path remains slow,
+  while the experimental `hashfast1024` and `hashfast1024r6` modes improve
+  long-message throughput by grouping 1024 bytes before each group
+  permutation. They are still opt-in candidates, not replacements.
+- PractRand over concatenated hash digests found early warning rows for both
+  experimental hashfast candidates. The warnings did not appear at the final
+  16 MiB level in this short run, but they keep the result at WARN rather than
+  clean PASS.
 - The experimental stream variants improve same-harness stream throughput over
   the released baseline, with `fast8x1024mix` reaching 375.694 MiB/s in the
   latest 256 MiB local run. This is stream/XOF-oriented evidence only. The

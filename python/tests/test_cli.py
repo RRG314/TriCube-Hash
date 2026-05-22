@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import os
 from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+PY_ENV = {**os.environ, "PYTHONPATH": str(ROOT / "python" / "src")}
 
 
 def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
@@ -11,6 +16,7 @@ def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
         check=True,
         text=True,
         capture_output=True,
+        env=PY_ENV,
     )
 
 
@@ -48,5 +54,6 @@ def test_console_script_hash_hex() -> None:
         check=True,
         text=True,
         capture_output=True,
+        env=PY_ENV,
     )
     assert proc.stdout.strip() == "779403a9c748fc3213493953fc17309367b37161c00dc19059c14db63774e11e"

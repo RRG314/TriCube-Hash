@@ -4,6 +4,15 @@
 
 Updates preparing the experimental `fast8x` stream path for review.
 
+- Added experimental hash candidates `hashfast1024` and `hashfast1024r6` as
+  opt-in C hash/XOF variants with separate domain tags.
+- Added C vector coverage for the experimental hash variants and a C API hash
+  benchmark target for baseline-vs-hashfast comparisons.
+- Added a C `digest-stream` CLI mode for external digest-concatenation battery
+  runs.
+- Added pytest smoke coverage for C CLI hash variants and digest-stream output.
+- Recorded the current hashfast result boundary: long-message throughput
+  improves substantially, but digest-concatenation PractRand remains WARN.
 - Added feedback-mixed stream candidates `fast8x384mix`, `fast8x512mix`,
   `fast8x768mix`, and `fast8x1024mix` as opt-in C stream variants.
 - Added fixed seed-123 first-64-byte C test coverage for the new feedback-mixed

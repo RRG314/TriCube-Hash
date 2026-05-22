@@ -14,12 +14,13 @@ below when a battery input should come from the hash API rather than stream
 mode, and label the result as a digest-concatenation test:
 
 ```bash
-python tests/crypto_analysis/hash_mode/digest_stream.py \
-  --implementation baseline_hash \
+c/build/tricube digest-stream \
+  --variant hashfast1024 \
   --seed 123 \
-  --messages 1048576 \
+  --messages 524288 \
+  --message-bytes 64 \
   --out - \
-| RNG_test stdin32 -tlmax 1GB
+| RNG_test stdin32 -tlmin 1KB -tlmax 16MB -tf 2 -te 1
 ```
 
 Digest-concatenation batteries are useful for hash-output screening, but they

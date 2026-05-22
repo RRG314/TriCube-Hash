@@ -49,6 +49,41 @@ The hash path did not receive the same speedup. A direct C API benchmark of
 this local run. The new speed result is therefore a stream/XOF result, not a
 general hash-throughput result.
 
+## 2026-05-21 Experimental Hashfast Candidate Update
+
+The branch now includes two opt-in experimental hash/XOF candidates:
+`hashfast1024` and `hashfast1024r6`. They do not replace the baseline hash or
+XOF path. Both keep the 2048-bit TriCube state, the same absorb operation,
+the same trailer/finalization structure, and the same output extraction. The
+change is the absorb schedule: up to 1024 bytes are absorbed before applying a
+group permutation. `hashfast1024` uses 8 group rounds and 16 final rounds;
+`hashfast1024r6` uses 6 group rounds and 16 final rounds.
+
+Direct C API hash throughput from `c/build/bench_hash_variants`:
+
+| Variant | 1 KiB | 4 KiB | 64 KiB | 1 MiB | 16 MiB | Current interpretation |
+|---|---:|---:|---:|---:|---:|---|
+| `baseline` | 18.326 MiB/s | 20.034 MiB/s | 20.417 MiB/s | 20.564 MiB/s | 20.178 MiB/s | Default reference hash path. |
+| `hashfast1024` | 78.426 MiB/s | 167.837 MiB/s | 253.867 MiB/s | 266.259 MiB/s | 273.188 MiB/s | Conservative long-message candidate. |
+| `hashfast1024r6` | 83.227 MiB/s | 192.863 MiB/s | 326.598 MiB/s | 342.553 MiB/s | 343.013 MiB/s | Faster lower-round candidate; higher scrutiny required. |
+
+The hash-mode quick screen suite produced `105 PASS` rows for
+`baseline_hash`, `hashfast1024`, and `hashfast1024r6`. That suite covers
+digest-path differential diffusion, rotational relation, sampled algebraic
+degree, collision/birthday, near-collision, and low-bit diagnostics.
+
+PractRand over 16 MiB of concatenated hash digests gave mixed results:
+
+| Candidate | Digest stream source | Result | Interpretation |
+|---|---|---:|---|
+| `hashfast1024` | 524,288 digests of deterministic 64-byte messages | WARN | One 1 KiB FPF/64 unusual row; no anomalies from 2 KiB through 16 MiB. |
+| `hashfast1024r6` | 524,288 digests of deterministic 64-byte messages | WARN | Several early low-bit FPF/NS3 warnings, including one VERY SUSPICIOUS row at 512 KiB; no anomalies at final 16 MiB. |
+
+These are digest-concatenation tests, not native XOF or stream tests. The
+result supports keeping `hashfast1024` as the more conservative experimental
+hash candidate and keeping `hashfast1024r6` as a speed candidate with a clear
+low-bit warning history. Neither candidate is a security claim.
+
 ## 2026-05-20 Probe/Screens Reproducibility Update
 
 The black-box development probes have been moved from result-only descriptions

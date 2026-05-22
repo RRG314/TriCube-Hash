@@ -10,18 +10,17 @@ CLI command:
 c/build/tricube hash --hex MESSAGE_HEX
 ```
 
-The current implementation list contains only `baseline_hash`. That is
-intentional. Faster hash-mode prototypes should not be added to the public
-branch until they have their own vectors, specification entries, and external
-testing. This folder provides the gate those candidates should pass before
-promotion.
+The implementation list contains `baseline_hash`, `hashfast1024`, and
+`hashfast1024r6`. The two `hashfast` entries are experimental candidates with
+their own domain tags and fixed C vectors. They do not replace the default hash
+or XOF path.
 
 ## Quick Run
 
 ```bash
 python tests/crypto_analysis/hash_mode/run_hash_screens.py \
   --profile quick \
-  --implementations baseline_hash \
+  --implementations baseline_hash,hashfast1024,hashfast1024r6 \
   --out tests/crypto_analysis/results/hash-quick-latest
 ```
 
@@ -33,26 +32,31 @@ collision/birthday, near-collision, and low-bit digest diagnostics.
 
 | Screen | Command |
 |---|---|
-| Differential diffusion | `python tests/crypto_analysis/hash_mode/differential_hash_screen.py --implementations baseline_hash --samples 64 --out tests/crypto_analysis/results/hash-differential-latest` |
-| Rotational relation | `python tests/crypto_analysis/hash_mode/rotational_hash_screen.py --implementations baseline_hash --samples 64 --out tests/crypto_analysis/results/hash-rotational-latest` |
-| Algebraic degree | `python tests/crypto_analysis/hash_mode/algebraic_hash_screen.py --implementations baseline_hash --variables 8 --output-bits 32 --out tests/crypto_analysis/results/hash-algebraic-latest` |
-| Collision and birthday | `python tests/crypto_analysis/hash_mode/collision_hash_screen.py --implementations baseline_hash --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/hash-collision-latest` |
-| Low-bit digest diagnostics | `python tests/crypto_analysis/hash_mode/low_bit_hash_screen.py --implementations baseline_hash --samples 4096 --out tests/crypto_analysis/results/hash-low-bit-latest` |
+| Differential diffusion | `python tests/crypto_analysis/hash_mode/differential_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 64 --out tests/crypto_analysis/results/hash-differential-latest` |
+| Rotational relation | `python tests/crypto_analysis/hash_mode/rotational_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 64 --out tests/crypto_analysis/results/hash-rotational-latest` |
+| Algebraic degree | `python tests/crypto_analysis/hash_mode/algebraic_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --variables 8 --output-bits 32 --out tests/crypto_analysis/results/hash-algebraic-latest` |
+| Collision and birthday | `python tests/crypto_analysis/hash_mode/collision_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/hash-collision-latest` |
+| Low-bit digest diagnostics | `python tests/crypto_analysis/hash_mode/low_bit_hash_screen.py --implementations baseline_hash,hashfast1024,hashfast1024r6 --samples 4096 --out tests/crypto_analysis/results/hash-low-bit-latest` |
 
 ## Digest Streams for External Batteries
 
 Some external randomness batteries can be run on concatenated hash digests. That
 is not the same as testing native XOF or stream output, so the input source must
-be labeled clearly in reports. The helper below writes repeated 32-byte digests
-of deterministic messages:
+be labeled clearly in reports. The C CLI can write repeated 32-byte digests of
+deterministic messages:
 
 ```bash
-python tests/crypto_analysis/hash_mode/digest_stream.py \
-  --implementation baseline_hash \
+c/build/tricube digest-stream \
+  --variant hashfast1024 \
   --seed 123 \
-  --messages 1048576 \
+  --messages 524288 \
+  --message-bytes 64 \
   --out -
 ```
+
+The Python `digest_stream.py` helper uses the same deterministic message
+schedule and remains available for small reproducibility checks, but the C CLI
+path is the practical input source for larger batteries.
 
 The output can be piped into tools such as PractRand or TestU01 stdin adapters.
 Passing such a battery is still a statistical screen, not a cryptographic

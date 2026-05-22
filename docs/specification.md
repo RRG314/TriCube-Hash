@@ -515,8 +515,27 @@ defined output.
 
 ## 11. Baseline vs Experimental Variants
 
-The baseline is the default public reference stream. The faster variants are
-experimental opt-in stream candidates for testing.
+The baseline hash, XOF, and stream modes remain the default public reference
+paths. Faster modes are experimental opt-in candidates for testing and do not
+replace the baseline.
+
+### Hash/XOF Variants
+
+The experimental hash variants keep the same state size, absorb routine,
+trailer/finalization structure, and output extraction as the baseline. They
+differ by grouping more 64-byte absorb blocks before applying the permutation.
+This is a throughput experiment for long messages, not a security claim.
+
+| Variant | Purpose | Group size | Group rounds | Final rounds | Domain tag | Status |
+|---|---|---:|---:|---:|---|---|
+| `baseline` | Preserved public reference hash/XOF | 64 bytes | 8 | 16 | `TC-TETRA256-V2` | default |
+| `hashfast1024` | Conservative wide-group hash candidate | 1024 bytes | 8 | 16 | `TC-TETRA256-V2/HASH/G1024-R8-F16` | experimental opt-in |
+| `hashfast1024r6` | Faster lower-round wide-group candidate | 1024 bytes | 6 | 16 | `TC-TETRA256-V2/HASH/G1024-R6-F16` | experimental opt-in; needs deeper testing |
+
+The C CLI accepts these modes with `hash --variant` and `xof --variant`. The
+Python package default API does not switch to either experimental mode.
+
+### Stream Variants
 
 | Variant | Purpose | Init rounds | Step rounds | Output rate | Output layer | Status |
 |---|---|---:|---:|---:|---|---|
@@ -541,6 +560,10 @@ These vectors are produced by the current C CLI.
 | Hash empty | empty byte string | `7fcaaa35165277bcaca583e23ef1d3545705e14d39f3ed7a802b1275d920cf49` |
 | Hash `abc` | `616263` | `779403a9c748fc3213493953fc17309367b37161c00dc19059c14db63774e11e` |
 | XOF `abc`, 64 bytes | `616263` | `6118c4b547c28533b968d6b7fc0b171817d8d9b1ced9e8c832dc7903e73baadcb6ce828c5f50d697bffddaef772c0b89d9314970df8cb5f15e95af6143e0667c` |
+| Experimental hashfast1024 empty | empty byte string, `--variant hashfast1024` | `ed5cff65fbeee6a702bdf1eefddb5e73b7bb4a31500d21b6bddff7336081869e` |
+| Experimental hashfast1024 `abc` | `616263`, `--variant hashfast1024` | `9b3930e72f1b5f006ac845ac5cf4b0b243fc49d82e52dd23e54c208718f6c607` |
+| Experimental hashfast1024r6 empty | empty byte string, `--variant hashfast1024r6` | `9c68491790e4728e200772cd91948529b4b31dc57c8a92aa943aee41d6faaa88` |
+| Experimental hashfast1024r6 `abc` | `616263`, `--variant hashfast1024r6` | `30b5095808175d52fb8afdf6933660752250696803873f4267068e77332da770` |
 | Baseline stream seed 123, first 64 bytes | seed `123` | `9ccace5701711cc2b47c06bf5a1a2b2b0bb5df09a8fb47a473ea18e34fef3695b7e233322a0b04a691402be1c630f070d954848a5c4013e8c745968288216d98` |
 | Experimental fast8x stream seed 123, first 64 bytes | seed `123`, `--variant fast8x` | `33d4d2da3afff406189a50b42322c03b2f1f9c411444d2b7347561fb9a882b3f4fcd0bbf306434b88a634e51d3f026e1466469adc8b688d4504f65355bb643ee` |
 | Experimental fast8x384mix stream seed 123, first 64 bytes | seed `123`, `--variant fast8x384mix` | `a12bb92b0c77e5c7541689708b248108829a937ae37c6b43b4717eb30725fee25b8fd9b74e8fcc989ee6861f49d4b2aa2705bce679198423025eaa5309a87833` |

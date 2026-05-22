@@ -69,14 +69,21 @@ The C implementation is the primary implementation path. It is standalone C11 an
 c/build/tricube self-test
 c/build/tricube vectors
 c/build/tricube hash --hex 616263
+c/build/tricube hash --hex 616263 --variant hashfast1024
 c/build/tricube hash path/to/file.bin
 c/build/tricube xof --hex 616263 --bytes 64
+c/build/tricube xof --hex 616263 --bytes 64 --variant hashfast1024
 c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin
 c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin --variant fast8x
 c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin --variant fast8x1024mix
 ```
 
 The public C header is [c/include/tricube.h](c/include/tricube.h). It exposes fixed 256-bit digest mode, XOF mode, context-style update/finalize/squeeze functions, deterministic stream generation, and self-test support.
+
+The experimental hash variants `hashfast1024` and `hashfast1024r6` are
+available through explicit C API and CLI variant selection. They use a wider
+1024-byte absorb group to improve long-message throughput, but they do not
+replace the baseline hash/XOF path.
 
 The experimental `fast8x` stream entry points are kept visible in
 [c/src/tricube_fast8x.c](c/src/tricube_fast8x.c). Newer feedback-mixed stream
@@ -163,8 +170,10 @@ Stream throughput is usable for external batteries; hash throughput is still the
 | Current standalone C TriCube stream | ~51.5 MiB/s in refresh run; ~53.1 MiB/s in package smoke run |
 | `sha256_counter_chain` Python harness control | ~51.3 MiB/s |
 | Current standalone C TriCube hash, 1024-byte messages, 16 rounds | ~18.2 MiB/s in latest local C API run; earlier refresh measured ~14.7 MiB/s |
+| Experimental C `hashfast1024` hash, 16 MiB messages | ~273.2 MiB/s; digest-concatenation PractRand WARN |
+| Experimental C `hashfast1024r6` hash, 16 MiB messages | ~343.0 MiB/s; stronger digest-concatenation low-bit warning |
 
-These numbers are not a claim of competitiveness with optimized SHA-2, SHA-3, BLAKE2, or BLAKE3 libraries. The faster rows are stream/XOF-oriented candidates only; the default baseline and hash-mode path remain separate.
+These numbers are not a claim of competitiveness with optimized SHA-2, SHA-3, BLAKE2, or BLAKE3 libraries. The faster rows are opt-in experimental candidates only; the default baseline remains separate.
 
 ### Interpretation
 
@@ -183,7 +192,7 @@ make -C c test
 python -m pip install -e ".[test]"
 pytest -q
 python benchmarks/bench_stream.py --bytes 1048576
-python tests/crypto_analysis/hash_mode/run_hash_screens.py --profile quick --implementations baseline_hash --out /tmp/tricube-hash-quick
+python tests/crypto_analysis/hash_mode/run_hash_screens.py --profile quick --implementations baseline_hash,hashfast1024,hashfast1024r6 --out /tmp/tricube-hash-quick
 ```
 
 External batteries are run from the C stream path:

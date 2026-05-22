@@ -20,8 +20,15 @@ target_link_libraries(test_stream PRIVATE tricube_core)
 add_executable(test_stream_variants tests/test_stream_variants.c)
 target_link_libraries(test_stream_variants PRIVATE tricube_core)
 
+add_executable(test_hash_variants tests/test_hash_variants.c)
+target_link_libraries(test_hash_variants PRIVATE tricube_core)
+
+add_executable(bench_hash_variants benchmarks/bench_hash_variants.c)
+target_link_libraries(bench_hash_variants PRIVATE tricube_core)
+
 enable_testing()
 add_test(NAME tricube_self_test COMMAND tricube self-test)
 add_test(NAME tricube_vectors COMMAND test_vectors)
 add_test(NAME tricube_stream COMMAND test_stream)
 add_test(NAME tricube_stream_variants COMMAND test_stream_variants)
+add_test(NAME tricube_hash_variants COMMAND test_hash_variants)

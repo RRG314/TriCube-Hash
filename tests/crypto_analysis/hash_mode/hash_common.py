@@ -49,6 +49,8 @@ from common import (  # noqa: E402
 
 HASH_IMPLEMENTATIONS = {
     "baseline_hash": "baseline_hash",
+    "hashfast1024": "hashfast1024",
+    "hashfast1024r6": "hashfast1024r6",
 }
 
 
@@ -114,6 +116,8 @@ def hash_digest(implementation: str, message: bytes) -> bytes:
         raise ValueError(f"unknown hash implementation: {implementation}")
     ensure_cli()
     cmd = [str(C_CLI), "hash", "--hex", message.hex()]
+    if implementation != "baseline_hash":
+        cmd.extend(["--variant", HASH_IMPLEMENTATIONS[implementation]])
     hex_digest = subprocess.check_output(cmd, cwd=REPO_ROOT, text=True).strip()
     return bytes.fromhex(hex_digest)
 

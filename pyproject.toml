@@ -52,5 +52,5 @@ where = ["python/src"]
 tricube = ["py.typed", "data/*.json"]
 
 [tool.pytest.ini_options]
-testpaths = ["python/tests"]
+testpaths = ["python/tests", "tests/smoke"]
 pythonpath = ["python/src"]
