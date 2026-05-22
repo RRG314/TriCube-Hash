@@ -34,6 +34,10 @@ jobs:
         if: runner.os != 'Windows'
         run: python tests/crypto_analysis/run_all_screens.py --profile quick --variants baseline,fast8x --out /tmp/tricube-quick
 
+      - name: Run hash-mode quick screens
+        if: runner.os != 'Windows'
+        run: python tests/crypto_analysis/hash_mode/run_hash_screens.py --profile quick --implementations baseline_hash --out /tmp/tricube-hash-quick
+
       - name: CLI smoke
         run: |
           python -m tricube.cli hash --hex 616263

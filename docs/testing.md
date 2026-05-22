@@ -219,6 +219,52 @@ The individual entry points are:
 The all-in-one runner imports these same modules. There is no second hidden
 implementation of the screens.
 
+## Hash-Mode Screen Suite
+
+The stream screens above do not test the hash API. Hash-mode screens live in
+[`tests/crypto_analysis/hash_mode/`](../tests/crypto_analysis/hash_mode/) and
+exercise the public C digest path:
+
+```bash
+c/build/tricube hash --hex MESSAGE_HEX
+```
+
+The current public implementation is named `baseline_hash` in these scripts.
+This name is deliberately separate from stream variants such as `fast8x` and
+`fast8x1024mix`. A faster hash prototype should only appear here after it has
+fixed vectors, a specification entry, and enough external testing to justify a
+public experimental status.
+
+Run the hash-mode quick profile:
+
+```bash
+python tests/crypto_analysis/hash_mode/run_hash_screens.py \
+  --profile quick \
+  --implementations baseline_hash \
+  --out tests/crypto_analysis/results/hash-quick-latest
+```
+
+The hash-mode quick profile checks deterministic 64-byte messages. It runs
+digest-path versions of the differential diffusion, rotational relation,
+small algebraic degree, collision/birthday, near-collision, and low-bit
+screens. The low-bit screen concatenates many 32-byte digests; this is useful
+for digest-output diagnostics, but it is not the same as testing native XOF or
+stream output.
+
+For external batteries over concatenated digests, use:
+
+```bash
+python tests/crypto_analysis/hash_mode/digest_stream.py \
+  --implementation baseline_hash \
+  --seed 123 \
+  --messages 1048576 \
+  --out -
+```
+
+Any PractRand, TestU01, Dieharder, SmokeRand, or NIST STS run fed by this
+helper should be labeled as a digest-concatenation test. It should not be
+presented as a native XOF or stream test.
+
 ## From Screens to Proper Cryptanalysis
 
 The current screens are useful because they are cheap, reproducible, and good

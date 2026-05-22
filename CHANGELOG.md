@@ -23,8 +23,10 @@ Updates preparing the experimental `fast8x` stream path for review.
   vector.
 - Added the reproducible crypto-analysis screen suite under `tests/`, with
   separate screen modules and an all-in-one quick runner.
+- Added a separate hash-mode screen suite so digest-path tests are not inferred
+  from stream-output screens.
 - Added CI coverage for C tests, Python tests, and the quick crypto-analysis
-  screen profile on non-Windows runners.
+  screen profiles on non-Windows runners.
 - Clarified that `fast8x` has been compared against the released TriCube
   stream baseline in the same C ablation harness, while optimized SHA-2,
   SHA-3/SHAKE, BLAKE2, and BLAKE3 library comparisons remain future work.

@@ -21,7 +21,8 @@ The reproducible black-box screen suite is in
 exact command, branch, commit, machine, seed, byte count, and status labels for
 each compact run. The same folder also contains a first white-box round-model
 analyzer that checks word-level schedule dependency and coverage without
-claiming formal cryptanalysis.
+claiming formal cryptanalysis. Stream-output screens and hash-mode screens are
+kept separate so stream results are not used as evidence for digest behavior.
 
 ## Quick Start
 
@@ -182,6 +183,7 @@ make -C c test
 python -m pip install -e ".[test]"
 pytest -q
 python benchmarks/bench_stream.py --bytes 1048576
+python tests/crypto_analysis/hash_mode/run_hash_screens.py --profile quick --implementations baseline_hash --out /tmp/tricube-hash-quick
 ```
 
 External batteries are run from the C stream path:

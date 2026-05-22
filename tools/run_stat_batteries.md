@@ -8,6 +8,23 @@ their binaries. Install each tool from its upstream source or your package
 manager, then follow that tool's license. The repository notice table is
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
+Most commands below test native stream output. Hash-mode testing is different:
+it concatenates 32-byte digests of many deterministic messages. Use the helper
+below when a battery input should come from the hash API rather than stream
+mode, and label the result as a digest-concatenation test:
+
+```bash
+python tests/crypto_analysis/hash_mode/digest_stream.py \
+  --implementation baseline_hash \
+  --seed 123 \
+  --messages 1048576 \
+  --out - \
+| RNG_test stdin32 -tlmax 1GB
+```
+
+Digest-concatenation batteries are useful for hash-output screening, but they
+do not replace native XOF/stream tests or cryptanalysis.
+
 ## PractRand
 
 ```bash

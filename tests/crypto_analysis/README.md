@@ -6,9 +6,9 @@ for obvious failures and warning patterns, not formal cryptanalysis.
 
 ## Shared Test Model
 
-The screens use the C CLI as the system under test. If `c/build/tricube` is not
-present, the helper layer builds it with `make -C c all`. Each black-box screen
-then asks the CLI for deterministic stream bytes:
+The stream screens use the C CLI as the system under test. If `c/build/tricube`
+is not present, the helper layer builds it with `make -C c all`. Each black-box
+stream screen then asks the CLI for deterministic stream bytes:
 
 ```text
 c/build/tricube stream --seed SEED --bytes N --out - [--variant fast8x1024mix]
@@ -20,12 +20,24 @@ For short-output screens, the tested function is:
 F_variant(seed) = first 32 bytes of TriCube stream output for that 64-bit seed
 ```
 
-The suite compares the released baseline stream path and any named
-experimental stream variants through that same interface. This gives a clean
-side-by-side test of stream initialization, stream stepping, output extraction,
-and variant domain separation. It does not test the hash API directly, and it
-does not inspect bit-level internal ARX propagation except in the separate
-white-box schedule model.
+The suite compares the released baseline stream path and any named experimental
+stream variants through that same interface. This gives a clean side-by-side
+test of stream initialization, stream stepping, output extraction, and variant
+domain separation. It does not test the hash API directly, and it does not
+inspect bit-level internal ARX propagation except in the separate white-box
+schedule model.
+
+Hash-mode screens live in `hash_mode/`. They use the same C CLI but exercise
+the public digest path instead:
+
+```text
+c/build/tricube hash --hex MESSAGE_HEX
+```
+
+Those screens are intentionally separate so stream results are not used as
+evidence for hash-mode behavior. The current public hash implementation is
+listed as `baseline_hash`; faster hash prototypes should only be added after
+they have fixed vectors, specification text, and external battery results.
 
 The quick and standard profiles use the following budgets.
 
@@ -66,6 +78,15 @@ python tests/crypto_analysis/run_all_screens.py \
   --profile standard \
   --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/standard-latest
+```
+
+Hash-mode quick profile:
+
+```bash
+python tests/crypto_analysis/hash_mode/run_hash_screens.py \
+  --profile quick \
+  --implementations baseline_hash \
+  --out tests/crypto_analysis/results/hash-quick-latest
 ```
 
 ## Screen Methods
@@ -333,6 +354,19 @@ or one threshold policy.
 | Low-bit diagnostics | `python tests/crypto_analysis/screens/low_bit_diagnostics.py --variants baseline,fast8x,fast8x1024mix --bytes 16777216 --out tests/crypto_analysis/results/low-bit-latest` |
 | White-box word-dependency model | `python tests/crypto_analysis/screens/whitebox_round_model.py --rounds 24 --out tests/crypto_analysis/results/whitebox-latest` |
 | External battery availability | `python tests/crypto_analysis/screens/external_batteries.py --variants baseline,fast8x --out tests/crypto_analysis/results/external-latest` |
+
+Hash-mode screens are in `hash_mode/` and can be run together or individually.
+They are separate because their input source is a sequence of messages and
+their output source is `tricube_hash()`, not stream bytes.
+
+| Hash-mode screen | Command |
+|---|---|
+| All hash-mode screens | `python tests/crypto_analysis/hash_mode/run_hash_screens.py --profile quick --implementations baseline_hash --out tests/crypto_analysis/results/hash-quick-latest` |
+| Hash differential diffusion | `python tests/crypto_analysis/hash_mode/differential_hash_screen.py --implementations baseline_hash --samples 64 --out tests/crypto_analysis/results/hash-differential-latest` |
+| Hash rotational relation | `python tests/crypto_analysis/hash_mode/rotational_hash_screen.py --implementations baseline_hash --samples 64 --out tests/crypto_analysis/results/hash-rotational-latest` |
+| Hash algebraic degree | `python tests/crypto_analysis/hash_mode/algebraic_hash_screen.py --implementations baseline_hash --variables 8 --output-bits 32 --out tests/crypto_analysis/results/hash-algebraic-latest` |
+| Hash collision and birthday | `python tests/crypto_analysis/hash_mode/collision_hash_screen.py --implementations baseline_hash --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/hash-collision-latest` |
+| Hash low-bit diagnostics | `python tests/crypto_analysis/hash_mode/low_bit_hash_screen.py --implementations baseline_hash --samples 4096 --out tests/crypto_analysis/results/hash-low-bit-latest` |
 
 Low-bit diagnostics at 16 MiB per variant:
 
