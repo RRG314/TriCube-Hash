@@ -1,0 +1,3 @@
+variant,bytes,byte_lsb_z,word32_lsb_z,word64_lsb_z,low_nibble_chi_square,max_bit_position_z64,low_bit_lag1_corr,high_bit_lag1_corr,status
+fast8x768mix,67108864,-0.8782,-0.6299,-0.3087,21.0585,2.9610,0.00001586,-0.00008177,PASS
+fast8x1024mix,67108864,-0.1724,0.3198,-0.1844,13.1716,2.9790,-0.00004323,0.00013290,PASS

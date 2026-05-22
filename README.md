@@ -8,7 +8,7 @@ TriCube is a cryptographic engineering research project, not a secure primitive.
 
 The repository contains a standalone C11 implementation, a Python reference package, fixed test vectors, CLI tools, benchmarks, reproducibility notes, external-battery run scripts, a result summary, and a manuscript.
 
-The strongest current result is that TriCube now has a concrete geometric construction with reproducible C/Python vectors and nontrivial statistical-battery evidence. The main open issues are low-bit PractRand warnings, incomplete cryptanalysis, and performance that is still below mature optimized hash implementations.
+The strongest current result is that TriCube now has a concrete geometric construction with reproducible C/Python vectors, nontrivial statistical-battery evidence, and opt-in C stream variants fast enough for larger external batteries. The main open issues are unresolved low-bit warnings in some variants, incomplete cryptanalysis, and hash-mode performance that is still below mature optimized hash implementations.
 
 ## Specification and Security Boundary
 
@@ -72,14 +72,17 @@ c/build/tricube hash path/to/file.bin
 c/build/tricube xof --hex 616263 --bytes 64
 c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin
 c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin --variant fast8x
+c/build/tricube stream --seed 123 --bytes 1048576 --out stream.bin --variant fast8x1024mix
 ```
 
 The public C header is [c/include/tricube.h](c/include/tricube.h). It exposes fixed 256-bit digest mode, XOF mode, context-style update/finalize/squeeze functions, deterministic stream generation, and self-test support.
 
 The experimental `fast8x` stream entry points are kept visible in
-[c/src/tricube_fast8x.c](c/src/tricube_fast8x.c). The shared permutation and
-variant profile live in [c/src/tricube.c](c/src/tricube.c), so `fast8x` remains
-one named TriCube stream variant rather than a forked second implementation.
+[c/src/tricube_fast8x.c](c/src/tricube_fast8x.c). Newer feedback-mixed stream
+candidates are available through the generic stream variant API and CLI. The
+shared permutation and all stream profiles live in [c/src/tricube.c](c/src/tricube.c),
+so the optimized paths remain named TriCube stream variants rather than forked
+second implementations.
 
 The Python CLI is available after installation:
 
@@ -108,11 +111,12 @@ See [docs/specification.md](docs/specification.md) for the exact construction an
 
 The following tables summarize the May 2026 validation evidence. These are engineering and statistical-screening results, not security proofs.
 
-The default stream path remains the released baseline. The repository also includes an
-experimental `fast8x` stream variant for external statistical testing. It is
-domain-separated from the baseline and must be requested explicitly with
-`--variant fast8x`. The ablation evidence for that choice is summarized in
-[tests/ablation_lab/](tests/ablation_lab/).
+The default stream path remains the released baseline. The repository also
+includes opt-in experimental stream variants for external statistical testing:
+`fast8x`, `fast8x384mix`, `fast8x512mix`, `fast8x768mix`, and
+`fast8x1024mix`. They are domain-separated from the baseline and must be
+requested explicitly with `--variant`. The ablation evidence and current
+ranking are summarized in [tests/ablation_lab/](tests/ablation_lab/).
 
 ### Statistical Batteries
 
@@ -147,16 +151,19 @@ Stream throughput is usable for external batteries; hash throughput is still the
 
 | Implementation / mode | Throughput |
 |---|---:|
-| Experimental C `fast8x` stream variant | ~132.7 MiB/s |
-| Released C baseline stream in the same ablation harness | ~69.8 MiB/s |
+| Experimental C `fast8x1024mix` stream variant | ~375.7 MiB/s |
+| Experimental C `fast8x768mix` stream variant | ~316.2 MiB/s, but PractRand low-bit watch |
+| Experimental C `fast8x512mix` stream variant | ~238.3 MiB/s |
+| Experimental C `fast8x` stream variant | ~150.0 MiB/s in latest local run; ~132.7 MiB/s in earlier ablation run |
+| Released C baseline stream in the latest local run | ~80.0 MiB/s |
 | `tricube_tc256_xof_fast` stream candidate | ~80.2 MiB/s |
 | `tricube_geo256_chain_fast` stream candidate | ~62.3 MiB/s |
 | `tricube_tetra_block256_chain_fast` stream candidate | ~57.3 MiB/s |
 | Current standalone C TriCube stream | ~51.5 MiB/s in refresh run; ~53.1 MiB/s in package smoke run |
 | `sha256_counter_chain` Python harness control | ~51.3 MiB/s |
-| Current standalone C TriCube hash, 1024-byte messages, 16 rounds | ~14.7 MiB/s |
+| Current standalone C TriCube hash, 1024-byte messages, 16 rounds | ~18.2 MiB/s in latest local C API run; earlier refresh measured ~14.7 MiB/s |
 
-These numbers are not a claim of competitiveness with optimized SHA-2, SHA-3, BLAKE2, or BLAKE3 libraries. They identify where the current prototype is usable and where it needs engineering work.
+These numbers are not a claim of competitiveness with optimized SHA-2, SHA-3, BLAKE2, or BLAKE3 libraries. The faster rows are stream/XOF-oriented candidates only; the default baseline and hash-mode path remain separate.
 
 ### Interpretation
 
@@ -184,7 +191,7 @@ make -C c all
 tools/run_practrand.sh 1073741824
 tools/run_dieharder.sh 1073741824
 tools/run_testu01.sh smallcrush 1073741824
-python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x --skip-python
+python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x,fast8x512mix,fast8x768mix,fast8x1024mix --skip-python
 ```
 
 See [tools/run_stat_batteries.md](tools/run_stat_batteries.md), [docs/testing.md](docs/testing.md), and [docs/reproducibility.md](docs/reproducibility.md) before interpreting results.

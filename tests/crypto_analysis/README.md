@@ -11,7 +11,7 @@ present, the helper layer builds it with `make -C c all`. Each black-box screen
 then asks the CLI for deterministic stream bytes:
 
 ```text
-c/build/tricube stream --seed SEED --bytes N --out - [--variant fast8x]
+c/build/tricube stream --seed SEED --bytes N --out - [--variant fast8x1024mix]
 ```
 
 For short-output screens, the tested function is:
@@ -20,8 +20,8 @@ For short-output screens, the tested function is:
 F_variant(seed) = first 32 bytes of TriCube stream output for that 64-bit seed
 ```
 
-The suite compares the released baseline stream path and the experimental
-`fast8x` stream variant through that same interface. This gives a clean
+The suite compares the released baseline stream path and any named
+experimental stream variants through that same interface. This gives a clean
 side-by-side test of stream initialization, stream stepping, output extraction,
 and variant domain separation. It does not test the hash API directly, and it
 does not inspect bit-level internal ARX propagation except in the separate
@@ -55,7 +55,7 @@ Quick profile:
 ```bash
 python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/quick-latest
 ```
 
@@ -64,7 +64,7 @@ Standard profile:
 ```bash
 python tests/crypto_analysis/run_all_screens.py \
   --profile standard \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/standard-latest
 ```
 
@@ -324,13 +324,13 @@ or one threshold policy.
 
 | Screen | Command |
 |---|---|
-| Differential diffusion | `python tests/crypto_analysis/screens/differential_screen.py --variants baseline,fast8x --samples 64 --out tests/crypto_analysis/results/differential-latest` |
-| Rotational relation | `python tests/crypto_analysis/screens/rotational_screen.py --variants baseline,fast8x --samples 64 --out tests/crypto_analysis/results/rotational-latest` |
-| Algebraic degree | `python tests/crypto_analysis/screens/algebraic_degree_screen.py --variants baseline,fast8x --variables 8 --output-bits 32 --out tests/crypto_analysis/results/algebraic-latest` |
-| Collision and birthday | `python tests/crypto_analysis/screens/collision_screen.py --variants baseline,fast8x --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/collision-latest` |
-| Overlap/fork uniqueness | `python tests/crypto_analysis/screens/overlap_fork_screen.py --variants baseline,fast8x --bytes 1048576 --out tests/crypto_analysis/results/overlap-latest` |
-| State-recovery/predictability | `python tests/crypto_analysis/screens/state_recovery_screen.py --variants baseline,fast8x --bytes 1048576 --bm-bits 4096 --out tests/crypto_analysis/results/state-recovery-latest` |
-| Low-bit diagnostics | `python tests/crypto_analysis/screens/low_bit_diagnostics.py --variants baseline,fast8x --bytes 16777216 --out tests/crypto_analysis/results/low-bit-latest` |
+| Differential diffusion | `python tests/crypto_analysis/screens/differential_screen.py --variants baseline,fast8x,fast8x1024mix --samples 64 --out tests/crypto_analysis/results/differential-latest` |
+| Rotational relation | `python tests/crypto_analysis/screens/rotational_screen.py --variants baseline,fast8x,fast8x1024mix --samples 64 --out tests/crypto_analysis/results/rotational-latest` |
+| Algebraic degree | `python tests/crypto_analysis/screens/algebraic_degree_screen.py --variants baseline,fast8x,fast8x1024mix --variables 8 --output-bits 32 --out tests/crypto_analysis/results/algebraic-latest` |
+| Collision and birthday | `python tests/crypto_analysis/screens/collision_screen.py --variants baseline,fast8x,fast8x1024mix --samples 512 --near-pairs 256 --out tests/crypto_analysis/results/collision-latest` |
+| Overlap/fork uniqueness | `python tests/crypto_analysis/screens/overlap_fork_screen.py --variants baseline,fast8x,fast8x1024mix --bytes 1048576 --out tests/crypto_analysis/results/overlap-latest` |
+| State-recovery/predictability | `python tests/crypto_analysis/screens/state_recovery_screen.py --variants baseline,fast8x,fast8x1024mix --bytes 1048576 --bm-bits 4096 --out tests/crypto_analysis/results/state-recovery-latest` |
+| Low-bit diagnostics | `python tests/crypto_analysis/screens/low_bit_diagnostics.py --variants baseline,fast8x,fast8x1024mix --bytes 16777216 --out tests/crypto_analysis/results/low-bit-latest` |
 | White-box word-dependency model | `python tests/crypto_analysis/screens/whitebox_round_model.py --rounds 24 --out tests/crypto_analysis/results/whitebox-latest` |
 | External battery availability | `python tests/crypto_analysis/screens/external_batteries.py --variants baseline,fast8x --out tests/crypto_analysis/results/external-latest` |
 
@@ -338,7 +338,7 @@ Low-bit diagnostics at 16 MiB per variant:
 
 ```bash
 python tests/crypto_analysis/screens/low_bit_diagnostics.py \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --bytes 16777216 \
   --out tests/crypto_analysis/results/low-bit-latest
 ```

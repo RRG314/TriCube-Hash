@@ -27,6 +27,7 @@
 #define TC_TETRA_COUNT (8 * 6)
 #define TC_EDGE_COUNT 54
 #define TC_SCHEDULE_ROUNDS 24
+#define TC_XMIX_WORDS 128
 
 typedef struct tetra_op {
     uint8_t a;
@@ -63,7 +64,22 @@ typedef struct perm_op {
     uint8_t src;
     uint8_t rot;
     uint64_t rc;
+    uint64_t xrc;
 } perm_op;
+
+typedef struct xmix_op {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+    uint8_t e;
+    uint8_t r0;
+    uint8_t r1;
+    uint8_t r2;
+    uint8_t rf;
+    uint64_t rc0;
+    uint64_t rc1;
+} xmix_op;
 
 static uint64_t ROUND_CONSTANTS[TC_RC_WORDS];
 static uint64_t IV[TC_STATE_WORDS];
@@ -73,6 +89,7 @@ static tetra_op TETRA_OPS[TC_SCHEDULE_ROUNDS][TC_TETRA_COUNT];
 static edge_op EDGE_OPS[TC_SCHEDULE_ROUNDS][TC_EDGE_COUNT];
 static shell_op SHELL_OPS[TC_SCHEDULE_ROUNDS][5];
 static perm_op PERM_OPS[TC_SCHEDULE_ROUNDS][TC_STATE_WORDS];
+static xmix_op XMIX_OPS[TC_RC_WORDS][TC_XMIX_WORDS];
 static bool TABLES_READY = false;
 static uint64_t DEFAULT_HASH32_STATE[TC_STATE_WORDS];
 static bool DEFAULT_HASH32_STATE_READY = false;
@@ -90,6 +107,10 @@ static inline uint64_t rotl64(uint64_t x, unsigned int r) {
     if (r == 0) {
         return x;
     }
+    return (x << r) | (x >> (64U - r));
+}
+
+static inline uint64_t rotl64nz(uint64_t x, unsigned int r) {
     return (x << r) | (x >> (64U - r));
 }
 
@@ -229,6 +250,22 @@ static void init_tables(void) {
             PERM_OPS[rnd][i].src = (uint8_t)((i * 9U + 5U) & 31U);
             PERM_OPS[rnd][i].rc = ROUND_CONSTANTS[((size_t)rnd * 32U + i) % TC_RC_WORDS] + i + (uint64_t)rnd;
             PERM_OPS[rnd][i].rot = (uint8_t)((i * 5U + (size_t)rnd) % 61U + 1U);
+            PERM_OPS[rnd][i].xrc = rotl64nz(PERM_OPS[rnd][i].rc, PERM_OPS[rnd][i].rot);
+        }
+    }
+    for (size_t counter_mod = 0; counter_mod < TC_RC_WORDS; counter_mod++) {
+        for (size_t j = 0; j < TC_XMIX_WORDS; j++) {
+            XMIX_OPS[counter_mod][j].a = (uint8_t)((j * 5U + counter_mod) & 31U);
+            XMIX_OPS[counter_mod][j].b = (uint8_t)((j * 11U + 7U) & 31U);
+            XMIX_OPS[counter_mod][j].c = (uint8_t)((j * 17U + 13U) & 31U);
+            XMIX_OPS[counter_mod][j].d = (uint8_t)((j * 23U + 19U) & 31U);
+            XMIX_OPS[counter_mod][j].e = (uint8_t)((j * 29U + counter_mod * 3U + 3U) & 31U);
+            XMIX_OPS[counter_mod][j].r0 = (uint8_t)((j * 7U + 9U) % 61U + 1U);
+            XMIX_OPS[counter_mod][j].r1 = (uint8_t)((j * 13U + 3U) % 61U + 1U);
+            XMIX_OPS[counter_mod][j].r2 = (uint8_t)((j * 19U + 17U) % 61U + 1U);
+            XMIX_OPS[counter_mod][j].rf = (uint8_t)((j * 11U + 5U) % 61U + 1U);
+            XMIX_OPS[counter_mod][j].rc0 = ROUND_CONSTANTS[(counter_mod * 13U + j * 17U) % TC_RC_WORDS];
+            XMIX_OPS[counter_mod][j].rc1 = ROUND_CONSTANTS[(counter_mod * 29U + j * 31U + 11U) % TC_RC_WORDS];
         }
     }
     TABLES_READY = true;
@@ -251,17 +288,10 @@ static void write_le64(uint8_t *out, uint64_t value) {
     }
 }
 
-static inline void emit_le64(uint8_t *out, size_t *pos, size_t n_bytes, uint64_t value) {
-    size_t p = *pos;
-    if (p + 8U <= n_bytes) {
-        write_le64(out + p, value);
-        *pos = p + 8U;
-        return;
+static inline void emit_tail64(uint8_t *out, size_t offset, size_t n_bytes, uint64_t value) {
+    for (size_t k = 0; k < 8U && offset < n_bytes; k++) {
+        out[offset++] = (uint8_t)((value >> (8U * k)) & 0xffU);
     }
-    for (size_t k = 0; k < 8U && p < n_bytes; k++) {
-        out[p++] = (uint8_t)((value >> (8U * k)) & 0xffU);
-    }
-    *pos = p;
 }
 
 static void write_le_u64_to_buf(uint8_t *out, uint64_t value) {
@@ -331,12 +361,9 @@ static void permute64(uint64_t state[TC_STATE_WORDS], int rounds) {
             state[op->opposite] ^= rotl64(state[op->lane] ^ state[op->vertex], op->rot);
         }
         for (size_t i = 0; i < TC_STATE_WORDS; i++) {
-            tmp[i] = state[PERM_OPS[srnd][i].src];
+            tmp[i] = state[PERM_OPS[srnd][i].src] ^ PERM_OPS[srnd][i].xrc;
         }
         memcpy(state, tmp, sizeof(tmp));
-        for (size_t i = 0; i < TC_STATE_WORDS; i++) {
-            state[i] ^= rotl64(PERM_OPS[srnd][i].rc, PERM_OPS[srnd][i].rot);
-        }
     }
 }
 
@@ -403,9 +430,8 @@ static bool use_default_hash32_state(uint64_t state[TC_STATE_WORDS], const uint8
 }
 
 static void squeeze_rate64(uint64_t state[TC_STATE_WORDS], uint64_t counter, uint8_t *out, size_t n_bytes) {
-    size_t groups = (n_bytes + 7U) / 8U;
-    size_t pos = 0;
-    for (size_t j = 0; j < groups; j++) {
+    size_t full_words = n_bytes / 8U;
+    for (size_t j = 0; j < full_words; j++) {
         uint64_t a = state[(j * 5U + (size_t)counter) & 31U];
         uint64_t b = state[(j * 11U + 7U) & 31U];
         uint64_t c = state[(j * 17U + 13U) & 31U];
@@ -413,31 +439,74 @@ static void squeeze_rate64(uint64_t state[TC_STATE_WORDS], uint64_t counter, uin
         uint64_t word = a + rotl64(b ^ ROUND_CONSTANTS[(counter + j) % TC_RC_WORDS],
                                     (unsigned int)((j * 7U + 9U) % 61U + 1U));
         word ^= rotl64(c + d + j + counter, (unsigned int)((j * 13U + 3U) % 61U + 1U));
-        emit_le64(out, &pos, n_bytes, word);
+        write_le64(out + j * 8U, word);
     }
-}
-
-static void squeeze_rate64_xmix(uint64_t state[TC_STATE_WORDS], uint64_t counter, uint8_t *out, size_t n_bytes) {
-    size_t groups = (n_bytes + 7U) / 8U;
-    size_t pos = 0;
-    for (size_t j = 0; j < groups; j++) {
+    if ((n_bytes & 7U) != 0U) {
+        size_t j = full_words;
         uint64_t a = state[(j * 5U + (size_t)counter) & 31U];
         uint64_t b = state[(j * 11U + 7U) & 31U];
         uint64_t c = state[(j * 17U + 13U) & 31U];
         uint64_t d = state[(j * 23U + 19U) & 31U];
-        uint64_t e = state[(j * 29U + (size_t)counter * 3U + 3U) & 31U];
-        uint64_t rc0 = ROUND_CONSTANTS[(counter * 13U + j * 17U) % TC_RC_WORDS];
-        uint64_t rc1 = ROUND_CONSTANTS[(counter * 29U + j * 31U + 11U) % TC_RC_WORDS];
-        uint64_t word = a + rotl64(b ^ rc0, (unsigned int)((j * 7U + 9U) % 61U + 1U));
+        uint64_t word = a + rotl64(b ^ ROUND_CONSTANTS[(counter + j) % TC_RC_WORDS],
+                                    (unsigned int)((j * 7U + 9U) % 61U + 1U));
         word ^= rotl64(c + d + j + counter, (unsigned int)((j * 13U + 3U) % 61U + 1U));
-        word += rotl64(e ^ rc1 ^ (counter + j * UINT64_C(0x9E3779B97F4A7C15)),
-                       (unsigned int)((j * 19U + 17U) % 61U + 1U));
-        word ^= rotl64(word, 23) ^ rotl64(word, 41);
-        word += rotl64(word ^ a ^ d, 17);
+        emit_tail64(out, j * 8U, n_bytes, word);
+    }
+}
+
+static inline uint64_t xmix_word(const uint64_t state[TC_STATE_WORDS], const xmix_op *op, uint64_t counter, size_t j) {
+    uint64_t a = state[op->a];
+    uint64_t b = state[op->b];
+    uint64_t c = state[op->c];
+    uint64_t d = state[op->d];
+    uint64_t e = state[op->e];
+    uint64_t word = a + rotl64(b ^ op->rc0, op->r0);
+    word ^= rotl64(c + d + j + counter, op->r1);
+    word += rotl64(e ^ op->rc1 ^ (counter + j * UINT64_C(0x9E3779B97F4A7C15)), op->r2);
+    word ^= rotl64(word, 23) ^ rotl64(word, 41);
+    word += rotl64(word ^ a ^ d, 17);
+    word ^= (word >> 31) ^ (word >> 47);
+    word += rotl64(word ^ b ^ c ^ op->rc0, 29);
+    word ^= word >> 33;
+    return word;
+}
+
+static void squeeze_rate64_xmix(uint64_t state[TC_STATE_WORDS], uint64_t counter, uint8_t *out, size_t n_bytes) {
+    size_t full_words = n_bytes / 8U;
+    const xmix_op *ops = XMIX_OPS[counter % TC_RC_WORDS];
+    for (size_t j = 0; j < full_words; j++) {
+        write_le64(out + j * 8U, xmix_word(state, &ops[j], counter, j));
+    }
+    if ((n_bytes & 7U) != 0U) {
+        size_t j = full_words;
+        emit_tail64(out, j * 8U, n_bytes, xmix_word(state, &ops[j], counter, j));
+    }
+}
+
+static void squeeze_rate64_xmix_feedback(uint64_t state[TC_STATE_WORDS], uint64_t counter, uint8_t *out, size_t n_bytes) {
+    size_t groups = (n_bytes + 7U) / 8U;
+    size_t counter_mod = counter % TC_RC_WORDS;
+    const xmix_op *ops = XMIX_OPS[counter_mod];
+    uint64_t carry0 = state[(counter + 27U) & 31U] ^ ROUND_CONSTANTS[(counter_mod * 37U + 17U) % TC_RC_WORDS] ^
+                      (counter * UINT64_C(0xD6E8FEB86659FD93));
+    uint64_t carry1 = state[(counter * 5U + 11U) & 31U] + ROUND_CONSTANTS[(counter_mod * 41U + 23U) % TC_RC_WORDS];
+    size_t full_words = n_bytes / 8U;
+    for (size_t j = 0; j < groups; j++) {
+        const xmix_op *op = &ops[j];
+        uint64_t word = xmix_word(state, op, counter, j);
+        uint64_t fold = carry0 + rotl64(carry1 ^ word ^ op->rc0, op->rf);
+        word ^= rotl64(fold, 17) ^ rotl64(fold + op->rc1, 43);
+        word += rotl64(word ^ carry0 ^ state[(op->a + op->e) & 31U], 29);
         word ^= (word >> 31) ^ (word >> 47);
-        word += rotl64(word ^ b ^ c ^ rc0, 29);
+        word += rotl64(word ^ carry1, 23);
         word ^= word >> 33;
-        emit_le64(out, &pos, n_bytes, word);
+        carry0 = rotl64(carry0 + word + op->rc0 + j, 27);
+        carry1 ^= rotl64(carry0 ^ op->rc1 ^ state[op->d], 39);
+        if (j < full_words) {
+            write_le64(out + j * 8U, word);
+        } else {
+            emit_tail64(out, j * 8U, n_bytes, word);
+        }
     }
 }
 
@@ -512,15 +581,23 @@ typedef struct stream_profile {
     int init_rounds;
     int step_rounds;
     size_t rate_bytes;
-    int use_xmix;
+    int extractor;
 } stream_profile;
 
 static const uint8_t STREAM_DOMAIN_BASELINE[] = "TC-TETRA256-" "V" "2/STREAM";
 static const uint8_t STREAM_DOMAIN_FAST8X[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X";
+static const uint8_t STREAM_DOMAIN_FAST8X384MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X384MIX";
+static const uint8_t STREAM_DOMAIN_FAST8X512MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X512MIX";
+static const uint8_t STREAM_DOMAIN_FAST8X768MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X768MIX";
+static const uint8_t STREAM_DOMAIN_FAST8X1024MIX[] = "TC-TETRA256-" "V" "2/STREAM/FAST8X1024MIX";
 
 static const stream_profile STREAM_PROFILES[] = {
     {TRICUBE_STREAM_BASELINE, "baseline", STREAM_DOMAIN_BASELINE, sizeof(STREAM_DOMAIN_BASELINE) - 1U, 12, 6, TC_RATE_BYTES, 0},
     {TRICUBE_STREAM_FAST8X, "fast8x", STREAM_DOMAIN_FAST8X, sizeof(STREAM_DOMAIN_FAST8X) - 1U, 8, 4, 256, 1},
+    {TRICUBE_STREAM_FAST8X384MIX, "fast8x384mix", STREAM_DOMAIN_FAST8X384MIX, sizeof(STREAM_DOMAIN_FAST8X384MIX) - 1U, 8, 4, 384, 2},
+    {TRICUBE_STREAM_FAST8X512MIX, "fast8x512mix", STREAM_DOMAIN_FAST8X512MIX, sizeof(STREAM_DOMAIN_FAST8X512MIX) - 1U, 8, 4, 512, 2},
+    {TRICUBE_STREAM_FAST8X768MIX, "fast8x768mix", STREAM_DOMAIN_FAST8X768MIX, sizeof(STREAM_DOMAIN_FAST8X768MIX) - 1U, 8, 4, 768, 2},
+    {TRICUBE_STREAM_FAST8X1024MIX, "fast8x1024mix", STREAM_DOMAIN_FAST8X1024MIX, sizeof(STREAM_DOMAIN_FAST8X1024MIX) - 1U, 8, 4, 1024, 2},
 };
 
 static const stream_profile *stream_profile_for_variant(tricube_stream_variant variant) {
@@ -547,6 +624,22 @@ int tricube_stream_variant_from_name(const char *name, tricube_stream_variant *v
     }
     if (strcmp(name, "fast8x") == 0 || strcmp(name, "rounds8x") == 0 || strcmp(name, "r8x") == 0) {
         *variant = TRICUBE_STREAM_FAST8X;
+        return TRICUBE_OK;
+    }
+    if (strcmp(name, "fast8x384mix") == 0 || strcmp(name, "fast8x384") == 0 || strcmp(name, "r8x384") == 0) {
+        *variant = TRICUBE_STREAM_FAST8X384MIX;
+        return TRICUBE_OK;
+    }
+    if (strcmp(name, "fast8x512mix") == 0 || strcmp(name, "fast8x512") == 0 || strcmp(name, "r8x512") == 0) {
+        *variant = TRICUBE_STREAM_FAST8X512MIX;
+        return TRICUBE_OK;
+    }
+    if (strcmp(name, "fast8x768mix") == 0 || strcmp(name, "fast8x768") == 0 || strcmp(name, "r8x768") == 0) {
+        *variant = TRICUBE_STREAM_FAST8X768MIX;
+        return TRICUBE_OK;
+    }
+    if (strcmp(name, "fast8x1024mix") == 0 || strcmp(name, "fast8x1024") == 0 || strcmp(name, "r8x1024") == 0) {
+        *variant = TRICUBE_STREAM_FAST8X1024MIX;
         return TRICUBE_OK;
     }
     return TRICUBE_ERR_INVALID_ARGUMENT;
@@ -576,7 +669,9 @@ static void stream_fill_bytes(uint64_t state[TC_STATE_WORDS], uint64_t seed, con
         }
         absorb_words(state, words, 4, *counter + 1U);
         permute64(state, profile->step_rounds);
-        if (profile->use_xmix) {
+        if (profile->extractor == 2) {
+            squeeze_rate64_xmix_feedback(state, *counter, out + pos, take);
+        } else if (profile->extractor == 1) {
             squeeze_rate64_xmix(state, *counter, out + pos, take);
         } else {
             squeeze_rate64(state, *counter, out + pos, take);

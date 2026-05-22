@@ -1,6 +1,7 @@
 rank,variant,speed_mib_s,classification,recommendation,reason
-1,fast8x,132.65,best_speed_safety_tradeoff,include_as_experimental_variant,Clean 1 GiB PractRand screen plus SmokeRand express and SmallCrush passes; speed improved without the observed low-bit failures.
-2,fast8x512,230.74,fast_with_warning,hold_for_research,Mild recurring PractRand low-bit unusual rows.
-3,fast8x_wide,285.71,near_target_failed,reject_current_design,Near target but showed very suspicious low-bit PractRand rows.
-4,fast8x_batch,311.98,fast_failed,reject_current_design,Met speed target but failed PractRand low-bit FPF checks at 8 KiB.
-5,fast4x512,371.32,fast_failed,reject_current_design,Fastest measured path but warning density was too high.
+1,fast8x1024mix,375.69,current_best_local_candidate,test_deeper,Fastest current candidate; passed low-bit diagnostics, SmokeRand express, PractRand 1 GiB, and SmallCrush in the local pass.
+2,fast8x512mix,238.32,middle_candidate,test_if_1024_regresses,Good speed increase over fast8x but below the 300 MiB/s target and not externally screened in the latest pass.
+3,fast8x,150.01,conservative_optimized_variant,keep_as_reference_fast_path,Original fixed-vector fast path remains useful as a less aggressive comparison point.
+4,fast8x384mix,185.30,limited_speed_gain,hold,Improves over fast8x but does not meet the speed target.
+5,fast8x768mix,316.22,fast_with_low_bit_watch,do_not_promote_yet,Crossed 300 MiB/s but PractRand showed recurring Low4/64 unusual rows.
+6,baseline,79.97,default_reference,keep_default,Preserved baseline stream path and compatibility reference.

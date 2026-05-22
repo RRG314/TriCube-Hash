@@ -1,7 +1,7 @@
-implementation,bytes,elapsed_s,mib_per_s,public_status
-tricube_c_stream_baseline,268435456,3.6678492500213906,69.79567112757076,default_baseline
-tricube_c_stream_fast8x,268435456,1.9298185000079684,132.65496211117417,added_experimental_variant
-tricube_c_stream_fast8x512,268435456,1.109450875024777,230.74478173202834,not_promoted_low_bit_watch
-tricube_c_stream_fast8x_wide,268435456,0.8960235409904271,285.7067792181311,not_promoted_low_bit_warning
-tricube_c_stream_fast8x_batch,268435456,0.8205709999892861,311.97787882260343,not_promoted_low_bit_failure
-tricube_c_stream_fast4x512,268435456,0.6894365840125829,371.31769032338985,not_promoted_low_bit_warning_density
+implementation,bytes,elapsed_s,mib_per_s,status,notes
+tricube_c_stream_baseline,268435456,3.201142,79.971,default_baseline,Latest portable O3 local run.
+tricube_c_stream_fast8x,268435456,1.706505,150.014,experimental_opt_in,Original fast8x path; fixed vector preserved.
+tricube_c_stream_fast8x384mix,268435456,1.3815606250427663,185.29769548989245,experimental_opt_in,Feedback-mixed wider extraction; below 200 MiB/s target.
+tricube_c_stream_fast8x512mix,268435456,1.074180,238.321,experimental_opt_in,Feedback-mixed wider extraction; useful middle candidate.
+tricube_c_stream_fast8x768mix,268435456,0.809552,316.224,experimental_low_bit_watch,Crosses 300 MiB/s but PractRand reported Low4/64 unusual rows.
+tricube_c_stream_fast8x1024mix,268435456,0.681406,375.694,current_best_local_candidate,Fastest candidate in this pass; PractRand 1 GiB and SmallCrush clean in this run.

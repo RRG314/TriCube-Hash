@@ -56,17 +56,18 @@ The C and Python implementations should agree on the fixed vectors.
 ```bash
 python benchmarks/bench_hash_sizes.py --quick
 python benchmarks/bench_throughput.py --quick
-python benchmarks/bench_stream.py --bytes 1048576 --variants baseline,fast8x
-python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x --skip-python
+python benchmarks/bench_stream.py --bytes 1048576 --variants baseline,fast8x,fast8x1024mix
+python benchmarks/bench_stream.py --bytes 268435456 --variants baseline,fast8x,fast8x512mix,fast8x768mix,fast8x1024mix --skip-python
 ```
 
-The `fast8x` stream variant is an experimental optimized path. It is not the
-default and does not replace the baseline stream. The ablation record explaining
-why it was added is in [tests/ablation_lab/](../tests/ablation_lab/). The
-public snapshot reports `fast8x` at 132.655 MiB/s on a 256 MiB stream run,
-compared with 69.796 MiB/s for the released baseline in the same harness. That
-is a same-machine comparison against the TriCube baseline, not a claim that
-`fast8x` has been competitively benchmarked against optimized SHA-2, SHA-3,
+The `fast8x` and `fast8x*mix` stream variants are experimental optimized paths.
+They are not the default and do not replace the baseline stream. The ablation
+record explaining why they were added is in
+[tests/ablation_lab/](../tests/ablation_lab/). The latest local snapshot
+reports `fast8x1024mix` at 375.694 MiB/s on a 256 MiB stream run, compared
+with 79.971 MiB/s for the released baseline in the same harness. That is a
+same-machine comparison against the TriCube baseline, not a claim that the
+variant has been competitively benchmarked against optimized SHA-2, SHA-3,
 BLAKE2, or BLAKE3 implementations.
 
 ## Development Screens
@@ -77,11 +78,11 @@ streams:
 ```bash
 python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/quick-latest
 
 python tests/crypto_analysis/screens/low_bit_diagnostics.py \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --bytes 16777216 \
   --out tests/crypto_analysis/results/low-bit-latest
 

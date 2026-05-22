@@ -14,8 +14,8 @@ static void usage(const char *argv0) {
             "  %s hash <file>\n"
             "  %s hash --hex HEX\n"
             "  %s xof --hex HEX --bytes N\n"
-            "  %s stream --seed N --bytes N --out FILE [--variant baseline|fast8x]\n"
-            "  %s stream --seed N --unbounded --out - [--variant baseline|fast8x]\n",
+            "  %s stream --seed N --bytes N --out FILE [--variant baseline|fast8x|fast8x384mix|fast8x512mix|fast8x768mix|fast8x1024mix]\n"
+            "  %s stream --seed N --unbounded --out - [--variant baseline|fast8x|fast8x384mix|fast8x512mix|fast8x768mix|fast8x1024mix]\n",
             argv0, argv0, argv0, argv0, argv0, argv0, argv0);
 }
 
@@ -181,7 +181,7 @@ static int cmd_stream(int argc, char **argv) {
             unbounded = 1;
         } else if (strcmp(argv[i], "--variant") == 0 && i + 1 < argc) {
             if (tricube_stream_variant_from_name(argv[++i], &variant) != TRICUBE_OK) {
-                fprintf(stderr, "invalid stream variant; expected baseline or fast8x\n");
+                fprintf(stderr, "invalid stream variant; expected baseline, fast8x, fast8x384mix, fast8x512mix, fast8x768mix, or fast8x1024mix\n");
                 return 2;
             }
         } else {

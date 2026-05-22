@@ -16,7 +16,13 @@ extern "C" {
 
 typedef enum tricube_stream_variant {
     TRICUBE_STREAM_BASELINE = 0,
-    TRICUBE_STREAM_FAST8X = 1
+    TRICUBE_STREAM_FAST8X = 1,
+    /* Experimental feedback-mixed stream candidates. These are opt-in
+       research variants and do not replace the baseline stream path. */
+    TRICUBE_STREAM_FAST8X384MIX = 2,
+    TRICUBE_STREAM_FAST8X512MIX = 3,
+    TRICUBE_STREAM_FAST8X768MIX = 4,
+    TRICUBE_STREAM_FAST8X1024MIX = 5
 } tricube_stream_variant;
 
 enum {

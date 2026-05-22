@@ -14,6 +14,31 @@ static const uint8_t FAST8X_SEED123_FIRST64[64] = {
     0x50, 0x4f, 0x65, 0x35, 0x5b, 0xb6, 0x43, 0xee
 };
 
+static int hex_value(int c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static int expect_first64_hex(const char *name, const uint8_t *actual, const char *expected_hex) {
+    uint8_t expected[64];
+    for (size_t i = 0; i < sizeof(expected); i++) {
+        int hi = hex_value((unsigned char)expected_hex[i * 2U]);
+        int lo = hex_value((unsigned char)expected_hex[i * 2U + 1U]);
+        if (hi < 0 || lo < 0) {
+            fprintf(stderr, "%s expected vector contains invalid hex\n", name);
+            return 1;
+        }
+        expected[i] = (uint8_t)((hi << 4) | lo);
+    }
+    if (memcmp(actual, expected, sizeof(expected)) != 0) {
+        fprintf(stderr, "%s seed 123 first 64-byte vector changed\n", name);
+        return 1;
+    }
+    return 0;
+}
+
 static int expect_distinct(const char *name, const uint8_t *a, const uint8_t *b, size_t n) {
     if (memcmp(a, b, n) == 0) {
         fprintf(stderr, "%s unexpectedly matched\n", name);
@@ -60,10 +85,18 @@ int main(void) {
     tricube_stream_variant parsed;
     uint8_t baseline[256];
     uint8_t fast8x[256];
+    uint8_t fast8x384mix[256];
+    uint8_t fast8x512mix[256];
+    uint8_t fast8x768mix[256];
+    uint8_t fast8x1024mix[256];
     uint8_t fast8x_named[256];
 
     failures += expect_deterministic(TRICUBE_STREAM_BASELINE, "baseline");
     failures += expect_deterministic(TRICUBE_STREAM_FAST8X, "fast8x");
+    failures += expect_deterministic(TRICUBE_STREAM_FAST8X384MIX, "fast8x384mix");
+    failures += expect_deterministic(TRICUBE_STREAM_FAST8X512MIX, "fast8x512mix");
+    failures += expect_deterministic(TRICUBE_STREAM_FAST8X768MIX, "fast8x768mix");
+    failures += expect_deterministic(TRICUBE_STREAM_FAST8X1024MIX, "fast8x1024mix");
 
     if (tricube_stream_variant_from_name("baseline", &parsed) != TRICUBE_OK || parsed != TRICUBE_STREAM_BASELINE) {
         fprintf(stderr, "baseline variant parsing failed\n");
@@ -77,6 +110,22 @@ int main(void) {
         fprintf(stderr, "r8x variant alias parsing failed\n");
         failures++;
     }
+    if (tricube_stream_variant_from_name("fast8x384mix", &parsed) != TRICUBE_OK || parsed != TRICUBE_STREAM_FAST8X384MIX) {
+        fprintf(stderr, "fast8x384mix variant parsing failed\n");
+        failures++;
+    }
+    if (tricube_stream_variant_from_name("fast8x512mix", &parsed) != TRICUBE_OK || parsed != TRICUBE_STREAM_FAST8X512MIX) {
+        fprintf(stderr, "fast8x512mix variant parsing failed\n");
+        failures++;
+    }
+    if (tricube_stream_variant_from_name("fast8x768mix", &parsed) != TRICUBE_OK || parsed != TRICUBE_STREAM_FAST8X768MIX) {
+        fprintf(stderr, "fast8x768mix variant parsing failed\n");
+        failures++;
+    }
+    if (tricube_stream_variant_from_name("fast8x1024mix", &parsed) != TRICUBE_OK || parsed != TRICUBE_STREAM_FAST8X1024MIX) {
+        fprintf(stderr, "fast8x1024mix variant parsing failed\n");
+        failures++;
+    }
     if (tricube_stream_variant_from_name("does-not-exist", &parsed) == TRICUBE_OK) {
         fprintf(stderr, "invalid variant was accepted\n");
         failures++;
@@ -84,12 +133,40 @@ int main(void) {
 
     tricube_stream_seed_variant(123, baseline, sizeof(baseline), TRICUBE_STREAM_BASELINE);
     tricube_stream_seed_variant(123, fast8x, sizeof(fast8x), TRICUBE_STREAM_FAST8X);
+    tricube_stream_seed_variant(123, fast8x384mix, sizeof(fast8x384mix), TRICUBE_STREAM_FAST8X384MIX);
+    tricube_stream_seed_variant(123, fast8x512mix, sizeof(fast8x512mix), TRICUBE_STREAM_FAST8X512MIX);
+    tricube_stream_seed_variant(123, fast8x768mix, sizeof(fast8x768mix), TRICUBE_STREAM_FAST8X768MIX);
+    tricube_stream_seed_variant(123, fast8x1024mix, sizeof(fast8x1024mix), TRICUBE_STREAM_FAST8X1024MIX);
     tricube_fast8x_stream_seed(123, fast8x_named, sizeof(fast8x_named));
     failures += expect_distinct("fast8x vs baseline", fast8x, baseline, sizeof(fast8x));
+    failures += expect_distinct("fast8x384mix vs fast8x", fast8x384mix, fast8x, sizeof(fast8x384mix));
+    failures += expect_distinct("fast8x512mix vs fast8x", fast8x512mix, fast8x, sizeof(fast8x512mix));
+    failures += expect_distinct("fast8x768mix vs fast8x", fast8x768mix, fast8x, sizeof(fast8x768mix));
+    failures += expect_distinct("fast8x1024mix vs fast8x", fast8x1024mix, fast8x, sizeof(fast8x1024mix));
     if (memcmp(fast8x, FAST8X_SEED123_FIRST64, sizeof(FAST8X_SEED123_FIRST64)) != 0) {
         fprintf(stderr, "fast8x seed 123 first 64-byte vector changed\n");
         failures++;
     }
+    failures += expect_first64_hex(
+        "fast8x384mix",
+        fast8x384mix,
+        "a12bb92b0c77e5c7541689708b248108829a937ae37c6b43b4717eb30725fee25b8fd9b74e8fcc989ee6861f49d4b2aa2705bce679198423025eaa5309a87833"
+    );
+    failures += expect_first64_hex(
+        "fast8x512mix",
+        fast8x512mix,
+        "b80cc954407ef991b5bc4cb98a0681a864fa963b3d61a0bc5b0f2ee1b7751f88e4312344cec6fe7a8706fa4a6316d7c041425ced180b856e652f37792655bb07"
+    );
+    failures += expect_first64_hex(
+        "fast8x768mix",
+        fast8x768mix,
+        "cd616a8054b827834fa5261e6379b08623bc93cc6c65c7c8a55880cd025e13fe5e4699fbd6e22c58e9d526bbea5955576223e1a1d3ddedb86dd983446fb4ddad"
+    );
+    failures += expect_first64_hex(
+        "fast8x1024mix",
+        fast8x1024mix,
+        "00270e07d3944d4f9342df5de1cde06e25c4aaf08909678ffaf4c8334e0ee3a095fead312380ef7c1a80d32c060203f225700fa3e3ebd073fd2f1064bb0a9ad1"
+    );
     if (memcmp(fast8x, fast8x_named, sizeof(fast8x)) != 0) {
         fprintf(stderr, "named fast8x entry point differs from stream variant\n");
         failures++;

@@ -4,6 +4,19 @@
 
 Updates preparing the experimental `fast8x` stream path for review.
 
+- Added feedback-mixed stream candidates `fast8x384mix`, `fast8x512mix`,
+  `fast8x768mix`, and `fast8x1024mix` as opt-in C stream variants.
+- Added fixed seed-123 first-64-byte C test coverage for the new feedback-mixed
+  stream candidates.
+- Updated the specification, ablation record, result summary, and
+  reproducibility docs with the new variant parameters, domain tags,
+  throughput numbers, and current battery status.
+- Recorded `fast8x1024mix` as the current best local stream candidate:
+  375.694 MiB/s on a 256 MiB stream run, SmokeRand express 7/7, PractRand
+  1 GiB with no anomalies, and TestU01 SmallCrush 15/15 in the latest local
+  pass.
+- Recorded `fast8x768mix` as a warning case: it crossed 300 MiB/s but showed
+  PractRand Low4/64 unusual rows and should not be promoted without a fix.
 - Added the opt-in `fast8x` C stream variant and documented its separate
   domain, round profile, output rate, and benchmark status.
 - Added a fixed `fast8x` seed-123 stream vector and C test coverage for that

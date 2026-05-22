@@ -2,10 +2,11 @@
  * TriCube fast8x stream entry points.
  *
  * fast8x is an experimental stream/XOF-oriented variant selected from the
- * ablation lab because it improved throughput without the low-bit failures
- * seen in faster tested variants. The core permutation, state schedule, and
- * xmix extraction path remain centralized in tricube.c so the implementation
- * does not fork into a second primitive.
+ * first ablation lab because it improved throughput without changing the
+ * default baseline stream path. Newer feedback-mixed variants are available
+ * through the generic stream-variant API and CLI. The named fast8x wrappers
+ * remain here for source compatibility and for reviewers who want the original
+ * optimized path explicitly.
  *
  * This variant is not a security claim and does not replace the baseline
  * TriCube stream path. Use it explicitly through these functions or through

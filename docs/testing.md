@@ -24,9 +24,12 @@ c/build/tricube hash --hex 616263
 c/build/tricube xof --hex 616263 --bytes 64
 c/build/tricube stream --seed 123 --bytes 1024 --out results/tmp/stream.bin
 c/build/tricube stream --seed 123 --bytes 1024 --out results/tmp/stream-fast8x.bin --variant fast8x
+c/build/tricube stream --seed 123 --bytes 1024 --out results/tmp/stream-fast8x1024mix.bin --variant fast8x1024mix
 ```
 
-The default stream path is the released baseline. The `fast8x` stream variant is experimental and must be requested explicitly. The compact ablation record is in [tests/ablation_lab/](../tests/ablation_lab/).
+The default stream path is the released baseline. The `fast8x` and
+`fast8x*mix` stream variants are experimental and must be requested explicitly.
+The compact ablation record is in [tests/ablation_lab/](../tests/ablation_lab/).
 
 ## Status Labels
 
@@ -73,7 +76,7 @@ The random delta classes are low-weight, medium-weight, and full-weight deltas. 
 ```bash
 python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/quick-latest
 ```
 
@@ -137,7 +140,7 @@ The standalone low-bit command is:
 
 ```bash
 python tests/crypto_analysis/screens/low_bit_diagnostics.py \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --bytes 16777216 \
   --out tests/crypto_analysis/results/low-bit-latest
 ```
@@ -183,7 +186,7 @@ Run the quick suite:
 ```bash
 python tests/crypto_analysis/run_all_screens.py \
   --profile quick \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/quick-latest
 ```
 
@@ -192,7 +195,7 @@ Run the standard suite when runtime allows:
 ```bash
 python tests/crypto_analysis/run_all_screens.py \
   --profile standard \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/standard-latest
 ```
 

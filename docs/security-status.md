@@ -18,16 +18,33 @@ The current public repository includes:
 - TestU01 Crush PASS, 144/144;
 - Dieharder battery result of 109 PASS, 2 WEAK, and 0 FAIL;
 - PractRand 1 GiB WARN because of unresolved low-bit warnings;
-- experimental `fast8x` stream benchmark result of 132.655 MiB/s on a 256
-  MiB run, compared with 69.796 MiB/s for the released baseline in the same
-  ablation harness;
+- experimental `fast8x` stream benchmark result of 132.655 MiB/s on the
+  original 256 MiB ablation run, compared with 69.796 MiB/s for the released
+  baseline in the same harness;
+- latest local `fast8x` stream benchmark result of 150.014 MiB/s on a
+  portable `-O3` 256 MiB run, compared with 79.971 MiB/s for the released
+  baseline in the same harness;
 - `fast8x` screening evidence through PractRand 1 GiB, SmokeRand express 7/7,
   TestU01 SmallCrush 15/15, and 16 MiB sanity probes;
+- feedback-mixed stream candidates up to `fast8x1024mix`, with the latest
+  local run measuring 375.694 MiB/s for `fast8x1024mix` and 79.971 MiB/s for
+  the released baseline in the same 256 MiB harness;
+- `fast8x1024mix` screening evidence through 64 MiB low-bit diagnostics,
+  SmokeRand express 7/7, PractRand 1 GiB with no anomalies, and TestU01
+  SmallCrush 15/15 in the latest local pass;
+- `fast8x768mix` warning evidence: it crossed 300 MiB/s but produced
+  PractRand Low4/64 unusual rows and should not be promoted without a design
+  fix and longer reruns;
 - a first white-box word-dependency model showing full 32-lane dependency by
   round 2 at 64-bit lane granularity;
 - scripts for PractRand, Dieharder, TestU01, and NIST STS workflows.
 
 The PractRand 1 GiB evaluation reached the final level with no anomalies in 2050 final-level results, but earlier levels flagged suspicious or unusual low-bit behavior. That result is classified as WARN.
+
+The clean `fast8x1024mix` PractRand 1 GiB screen is encouraging but narrower:
+it is one local run of an experimental stream variant. It does not remove the
+baseline PractRand warning, and it does not replace multi-seed 10 GiB+ runs or
+formal cryptanalysis.
 
 The structural probes in the result summary are black-box development screens:
 the black-box differential diffusion probe, black-box rotational relation

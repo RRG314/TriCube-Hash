@@ -38,13 +38,15 @@ That structure may or may not survive cryptanalytic review. The repository keeps
 
 The current public benchmark comparison is intentionally narrower than a
 competitive hash-library shootout. The released TriCube stream path and the
-experimental `fast8x` stream path have been compared in the same C ablation
-harness: `fast8x` measured 132.655 MiB/s on a 256 MiB stream run, while the
-released baseline measured 69.796 MiB/s in that same run. The repo also reports
-project controls and battery-screen results for `fast8x`.
+experimental stream variants have been compared in the same C ablation harness.
+In the latest local run, `fast8x1024mix` measured 375.694 MiB/s on a 256 MiB
+stream run, while the released baseline measured 79.971 MiB/s in that same
+run. The repo also reports project controls and battery-screen results for the
+stream candidates.
 
 What remains incomplete is the broader comparison that would matter for public
 performance claims: optimized C implementations of SHA-256, SHA3/SHAKE,
-BLAKE2, BLAKE3, and other mature hash/XOF libraries on the same hardware, plus
-independent cryptanalysis against the reduced-round and full-round TriCube
-construction.
+BLAKE2, BLAKE3, and other mature hash/XOF libraries on the same hardware. The
+new fast rows are stream/XOF-oriented measurements; the current hash path is
+still much slower. Independent cryptanalysis against the reduced-round and
+full-round TriCube construction also remains incomplete.

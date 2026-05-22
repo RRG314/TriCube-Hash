@@ -147,7 +147,7 @@ Table 2. Internal statistical benchmark. All TriCube variants passed all sanity 
 
 ### 6.3 Throughput (100 MiB)
 
-A 100 MiB stream benchmark assessed sustained throughput for the original Python recovery candidates. Those measurements are useful implementation evidence but not a competitive hash benchmark. The later C ablation harness measured the released baseline at 69.796 MiB/s and the experimental fast8x stream variant at 132.655 MiB/s on a 256 MiB stream run. Optimized native implementations of BLAKE3, SHA-2, and SHA-3 can operate much faster on modern hardware, so these numbers should be read as prototype engineering results.
+A 100 MiB stream benchmark assessed sustained throughput for the original Python recovery candidates. Those measurements are useful implementation evidence but not a competitive hash benchmark. Later C ablation harnesses measured the released baseline, the original fast8x stream variant, and newer feedback-mixed candidates on 256 MiB stream runs. Optimized native implementations of BLAKE3, SHA-2, and SHA-3 can operate much faster on modern hardware, so these numbers should be read as prototype engineering results.
 
 | Generator | Throughput | Bytes Measured | Notes |
 | --- | --- | --- | --- |
@@ -160,18 +160,21 @@ A 100 MiB stream benchmark assessed sustained throughput for the original Python
 | tricube_tetra_block256_native | 0.056 MiB/s | 1,048,576 | Native squeeze cap |
 | legacy TriCube prototype | 0.221 MiB/s | 1,048,576 | Native squeeze cap |
 | sha256_counter_chain | 48.598 MiB/s | 104,857,600 | Reference control (same Python harness) |
-| tricube_c_stream_fast8x | 132.655 MiB/s | 268,435,456 | Experimental opt-in stream variant; cleanest optimized ablation candidate |
-| tricube_c_stream_baseline | 69.796 MiB/s | 268,435,456 | Released baseline in the same ablation harness |
+| tricube_c_stream_fast8x1024mix | 375.694 MiB/s | 268,435,456 | Current fastest local feedback-mixed stream candidate |
+| tricube_c_stream_fast8x768mix | 316.224 MiB/s | 268,435,456 | Crossed speed target but retained PractRand low-bit watch item |
+| tricube_c_stream_fast8x512mix | 238.321 MiB/s | 268,435,456 | Middle feedback-mixed stream candidate |
+| tricube_c_stream_fast8x | 150.014 MiB/s | 268,435,456 | Original experimental opt-in stream variant, latest portable `-O3` run |
+| tricube_c_stream_baseline | 79.971 MiB/s | 268,435,456 | Released baseline in the same latest portable `-O3` run |
 
-Table 3. Throughput summary. The Python-candidate rows come from the original 100 MiB harness; the C baseline and fast8x rows come from the later ablation harness on the Apple M4 Pro local research machine.
+Table 3. Throughput summary. The Python-candidate rows come from the original 100 MiB harness; the C stream rows come from later ablation harnesses on the Apple M4 Pro local research machine. The feedback-mixed rows are stream/XOF-oriented candidates and do not represent hash-mode throughput.
 
 6.4 fast8x Stream Variant Update
 
-After the original May 2026 evaluation, an ablation pass tested faster stream/XOF paths. The optimized candidate included in the repository is fast8x. It uses a separate stream domain tag, 8 initialization rounds, 4 per-block stream rounds, a 256-byte stream rate, and an additional TriCube-family output mixing layer. It must be requested explicitly with --variant fast8x.
+After the original May 2026 evaluation, ablation passes tested faster stream/XOF paths. The first optimized candidate included in the repository was fast8x. It uses a separate stream domain tag, 8 initialization rounds, 4 per-block stream rounds, a 256-byte stream rate, and an additional TriCube-family output mixing layer. It must be requested explicitly with --variant fast8x.
 
-In the ablation harness, fast8x measured 132.655 MiB/s on a 256 MiB stream run, compared with 69.796 MiB/s for the released baseline in the same harness. A later 64 MiB smoke run measured 130.940 MiB/s for fast8x and 73.067 MiB/s for the baseline. The ablation record lists fast8x as clean through PractRand 1 GiB, SmokeRand express 7/7, TestU01 SmallCrush 15/15, and 16 MiB sanity probes with no repeated 32-byte blocks.
+In the original ablation harness, fast8x measured 132.655 MiB/s on a 256 MiB stream run, compared with 69.796 MiB/s for the released baseline in the same harness. A later 64 MiB smoke run measured 130.940 MiB/s for fast8x and 73.067 MiB/s for the baseline. The latest portable `-O3` 256 MiB run measured 150.014 MiB/s for fast8x and 79.971 MiB/s for the baseline. The ablation record lists fast8x as clean through PractRand 1 GiB, SmokeRand express 7/7, TestU01 SmallCrush 15/15, and 16 MiB sanity probes with no repeated 32-byte blocks.
 
-Faster variants were not promoted. fast8x_batch reached 311.98 MiB/s but failed PractRand low-bit FPF checks; fast8x_wide reached 285.71 MiB/s but showed very suspicious low-bit rows; fast8x512 reached 230.74 MiB/s but had recurring low-bit warnings. The public rule is conservative: speed gains that introduce repeatable low-bit warnings do not get promoted.
+A later local pass added feedback-mixed variants that keep the fast8x round budget while widening the output rate and chaining extraction through state-derived carry terms. In that pass, fast8x1024mix reached 375.694 MiB/s and passed SmokeRand express 7/7, PractRand 1 GiB with no anomalies, and TestU01 SmallCrush 15/15. The nearby fast8x768mix variant reached 316.224 MiB/s but produced PractRand Low4/64 unusual rows, so it remains a warning case. The public rule is conservative: speed gains that introduce repeatable low-bit warnings do not get promoted without further design work and reruns.
 
 ## 7. Structural Checks and Black-Box Development Probes
 

@@ -14,12 +14,16 @@ TriCube is not ready for security use. The current project should be treated as 
 
 ## Engineering Limitations
 
-- The C implementation is portable C11 but not heavily optimized.
-- The experimental `fast8x` stream path improves same-harness stream
-  throughput over the released baseline, from 69.796 MiB/s to 132.655 MiB/s
-  in the 256 MiB ablation run. The missing performance comparison is against
-  optimized SHA-2, SHA-3/SHAKE, BLAKE2, and BLAKE3 libraries on the same
-  hardware.
+- The C implementation is portable C11 but not heavily optimized for hash mode.
+- The experimental stream variants improve same-harness stream throughput over
+  the released baseline, with `fast8x1024mix` reaching 375.694 MiB/s in the
+  latest 256 MiB local run. This is stream/XOF-oriented evidence only. The
+  main hash path remains much slower, and the missing performance comparison
+  is against optimized SHA-2, SHA-3/SHAKE, BLAKE2, and BLAKE3 libraries on the
+  same hardware.
+- Wider stream extraction is a risk area. `fast8x768mix` crossed 300 MiB/s but
+  showed PractRand Low4/64 unusual rows, so speed alone is not enough to
+  justify promotion.
 - The context API currently buffers input before finalization, so very large file hashing should prefer CLI/file-oriented paths until streaming internals are hardened.
 - Windows CI and wheel packaging need regular verification before public package release.
 

@@ -58,12 +58,18 @@ TriCube absorbs message blocks into selected lanes, applies partial permutation 
 
 Digest mode emits 32 bytes. XOF mode emits an arbitrary number of bytes by continuing the squeeze schedule. Stream mode initializes from a seed and emits deterministic stream bytes for statistical testing.
 
-The default stream path is the released baseline. The C API also exposes an
-experimental `fast8x` stream variant for continued testing. `fast8x` is
-domain-separated from the baseline, uses fewer rounds in the stream update path,
-widens the stream extraction rate, and adds an xmix output layer. It
-does not change digest mode, XOF mode, fixed vectors, or the default stream
-behavior.
+The default stream path is the released baseline. The C API also exposes
+experimental faster stream variants for continued testing. `fast8x` is the
+original optimized path: it is domain-separated from the baseline, uses fewer
+rounds in the stream update path, widens the stream extraction rate, and adds
+an xmix output layer. The newer `fast8x*mix` candidates keep the same 8-round
+initialization and 4-round stream step, widen the output rate further, and add
+a feedback xmix extraction layer so wider output words are chained through
+state-derived carry terms.
+
+These stream variants do not change digest mode, XOF mode, fixed hash vectors,
+or the default stream behavior. They are candidates for testing speed and
+statistical behavior, not security recommendations.
 
 The construction uses domain separation strings so hash, XOF, and stream behavior do not share the same state initialization path. Some implementation domain strings retain earlier prototype labels so the May 2026 test vectors remain reproducible. The public project name is TriCube.
 

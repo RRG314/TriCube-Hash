@@ -43,6 +43,10 @@ class Variant:
 VARIANTS = {
     "baseline": Variant("baseline", "baseline"),
     "fast8x": Variant("fast8x", "fast8x"),
+    "fast8x384mix": Variant("fast8x384mix", "fast8x384mix"),
+    "fast8x512mix": Variant("fast8x512mix", "fast8x512mix"),
+    "fast8x768mix": Variant("fast8x768mix", "fast8x768mix"),
+    "fast8x1024mix": Variant("fast8x1024mix", "fast8x1024mix"),
 }
 
 
@@ -275,4 +279,3 @@ def group_by_status(rows: list[dict[str, Any]]) -> dict[str, int]:
     for row in rows:
         counts[str(row.get("status", "UNKNOWN"))] += 1
     return dict(sorted(counts.items()))
-

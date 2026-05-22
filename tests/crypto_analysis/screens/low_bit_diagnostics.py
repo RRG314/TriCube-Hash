@@ -16,8 +16,6 @@ ensure_import_path()
 from common import (  # noqa: E402
     STATUS_PASS,
     STATUS_WARN,
-    bit_position_counts64,
-    mean,
     parse_variants,
     stream_bytes,
     zscore_ones,
@@ -25,17 +23,20 @@ from common import (  # noqa: E402
 from _output import screen_metadata, write_single_screen  # noqa: E402
 
 
-def lag_correlation(bits: list[int]) -> float:
-    if len(bits) < 2:
+def lag_correlation_from_transitions(transitions: Counter[tuple[int, int]]) -> float:
+    n_pairs = sum(transitions.values())
+    if n_pairs <= 0:
         return 0.0
-    xs = bits[:-1]
-    ys = bits[1:]
-    mx = mean([float(x) for x in xs])
-    my = mean([float(y) for y in ys])
-    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
-    denx = math.sqrt(sum((x - mx) ** 2 for x in xs))
-    deny = math.sqrt(sum((y - my) ** 2 for y in ys))
-    return num / (denx * deny) if denx and deny else 0.0
+    sum_x = transitions[(1, 0)] + transitions[(1, 1)]
+    sum_y = transitions[(0, 1)] + transitions[(1, 1)]
+    sum_xy = transitions[(1, 1)]
+    mx = sum_x / n_pairs
+    my = sum_y / n_pairs
+    cov = sum_xy - (sum_x * sum_y / n_pairs)
+    var_x = sum_x - n_pairs * mx * mx
+    var_y = sum_y - n_pairs * my * my
+    den = math.sqrt(var_x * var_y)
+    return cov / den if den else 0.0
 
 
 def run_screen(variants: list[str], stream_size: int, seed: int) -> list[dict[str, Any]]:
@@ -43,21 +44,47 @@ def run_screen(variants: list[str], stream_size: int, seed: int) -> list[dict[st
     for variant in variants:
         data = stream_bytes(variant, seed, stream_size)
         n_bytes = len(data)
-        byte_lsb = sum(byte & 1 for byte in data)
         word32_count = n_bytes // 4
         word64_count = n_bytes // 8
-        word32_lsb = sum(int.from_bytes(data[i * 4 : i * 4 + 4], "little") & 1 for i in range(word32_count))
-        word64_lsb = sum(int.from_bytes(data[i * 8 : i * 8 + 8], "little") & 1 for i in range(word64_count))
-        low_nibbles = Counter(byte & 0x0F for byte in data)
+        byte_lsb = 0
+        word32_lsb = 0
+        word64_lsb = 0
+        low_nibbles: Counter[int] = Counter()
+        byte_position_values = [[0] * 256 for _ in range(8)]
+        low_transitions: Counter[tuple[int, int]] = Counter()
+        high_transitions: Counter[tuple[int, int]] = Counter()
+        prev_low: int | None = None
+        prev_high: int | None = None
+        counted_word_bytes = word64_count * 8
+        for idx, byte in enumerate(data):
+            low = byte & 1
+            high = (byte >> 7) & 1
+            byte_lsb += low
+            low_nibbles[byte & 0x0F] += 1
+            if idx % 4 == 0 and idx // 4 < word32_count:
+                word32_lsb += low
+            if idx % 8 == 0 and idx // 8 < word64_count:
+                word64_lsb += low
+            if idx < counted_word_bytes:
+                byte_position_values[idx & 7][byte] += 1
+            if prev_low is not None:
+                low_transitions[(prev_low, low)] += 1
+                high_transitions[(prev_high if prev_high is not None else 0, high)] += 1
+            prev_low = low
+            prev_high = high
         expected_nibble = n_bytes / 16
         nibble_chi2 = sum(((low_nibbles[i] - expected_nibble) ** 2) / expected_nibble for i in range(16))
-        bit_counts = bit_position_counts64(data[: word64_count * 8])
+        bit_counts = [0] * 64
+        for byte_pos in range(8):
+            counts = byte_position_values[byte_pos]
+            for value, count in enumerate(counts):
+                if count:
+                    base = byte_pos * 8
+                    for bit in range(8):
+                        bit_counts[base + bit] += count * ((value >> bit) & 1)
         bit_z = [abs(zscore_ones(count, word64_count)) for count in bit_counts]
-        low_bits = [(byte & 1) for byte in data]
-        transitions = Counter((low_bits[i], low_bits[i + 1]) for i in range(len(low_bits) - 1))
-        high_bits = [(byte >> 7) & 1 for byte in data]
-        low_lag1 = lag_correlation(low_bits)
-        high_lag1 = lag_correlation(high_bits)
+        low_lag1 = lag_correlation_from_transitions(low_transitions)
+        high_lag1 = lag_correlation_from_transitions(high_transitions)
         max_z = max(
             abs(zscore_ones(byte_lsb, n_bytes)),
             abs(zscore_ones(word32_lsb, word32_count)),
@@ -78,10 +105,10 @@ def run_screen(variants: list[str], stream_size: int, seed: int) -> list[dict[st
                 "word64_lsb_z": round(zscore_ones(word64_lsb, word64_count), 4),
                 "low_nibble_chi_square": round(nibble_chi2, 4),
                 "max_bit_position_z64": round(max(bit_z), 4),
-                "low_bit_transition_00": transitions[(0, 0)],
-                "low_bit_transition_01": transitions[(0, 1)],
-                "low_bit_transition_10": transitions[(1, 0)],
-                "low_bit_transition_11": transitions[(1, 1)],
+                "low_bit_transition_00": low_transitions[(0, 0)],
+                "low_bit_transition_01": low_transitions[(0, 1)],
+                "low_bit_transition_10": low_transitions[(1, 0)],
+                "low_bit_transition_11": low_transitions[(1, 1)],
                 "low_bit_lag1_corr": round(low_lag1, 8),
                 "high_bit_lag1_corr": round(high_lag1, 8),
                 "status": status,

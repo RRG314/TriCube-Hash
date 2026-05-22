@@ -1,6 +1,5 @@
 variant,practrand,smokerand_express,smallcrush,notes
-fast8x,PASS_1G_CLEAN,PASS_7_0_0,PASS_15_15,Cleanest optimized candidate in the ablation pass.
-fast8x512,WARN_1G_LOW_BIT_UNUSUAL,PASS_7_0_0,PASS_15_15,Fast but recurring unusual low-bit rows.
-fast8x_wide,FAIL_256M_LOW_BIT_WARNINGS,NOT_RUN,NOT_RUN,Very suspicious NS3 at 16 KiB and later suspicious FPF rows.
-fast8x_batch,FAIL_256M_LOW_BIT_FPF,NOT_VALID_AFTER_CHANGE,NOT_VALID_AFTER_CHANGE,Reached 300+ MiB/s but failed low-bit FPF checks at 8 KiB.
-fast4x512,WARN_256M_MULTIPLE_LOW_BIT,PASS_7_0_0,NOT_RUN_CURRENT,Fastest measured old path but warning density was too high.
+fast8x,PASS_1G_CLEAN,PASS_7_0_0,PASS_15_15,Original optimized candidate from the first ablation pass.
+fast8x512mix,NOT_RUN_CURRENT,NOT_RUN_CURRENT,NOT_RUN_CURRENT,Speed improved but not yet screened externally in the latest local pass.
+fast8x768mix,WARN_256M_LOW4_64_DC6_UNUSUAL,PASS_7_0_0,NOT_RUN_CURRENT,Crossed 300 MiB/s but retained a low-bit PractRand watch item.
+fast8x1024mix,PASS_1G_CLEAN,PASS_7_0_0,PASS_15_15,Current best local candidate; needs longer multi-seed batteries before promotion.

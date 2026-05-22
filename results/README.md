@@ -7,15 +7,15 @@ This directory contains concise public-facing result summaries, not large uncura
 - `raw/practrand-1gb-summary-2026-05-19.md` summarizes the most important external-battery warning.
 - `raw/practrand-1gb-stdout-2026-05-19.txt` preserves the corresponding PractRand output log.
 
-The fast8x stream optimization is documented under
-`tests/ablation_lab/` rather than as a large result-log bundle. That record
-explains why `fast8x` was added as an explicit experimental stream variant and
-why faster low-bit-warning variants were not promoted.
+The stream optimization work is documented under `tests/ablation_lab/` rather
+than as a large result-log bundle. That record explains why `fast8x` was added,
+how the feedback-mixed `fast8x*mix` candidates differ, and why variants with
+repeatable low-bit warnings are held back.
 
-The key fast8x throughput result is 132.655 MiB/s on a 256 MiB stream run,
-versus 69.796 MiB/s for the released TriCube baseline in the same C ablation
-harness. That is a baseline comparison inside the TriCube implementation
-family. Optimized SHA-2, SHA-3/SHAKE, BLAKE2, and BLAKE3 library comparisons
-remain future work.
+The latest local stream result is 375.694 MiB/s for `fast8x1024mix` on a
+256 MiB stream run, versus 79.971 MiB/s for the released TriCube baseline in
+the same C harness. That is a baseline comparison inside the TriCube
+implementation family. Optimized SHA-2, SHA-3/SHAKE, BLAKE2, and BLAKE3
+library comparisons remain future work.
 
 Large external-battery logs should normally be attached to releases or stored outside the main repository unless they are small enough and important enough to inspect directly.

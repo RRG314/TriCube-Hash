@@ -18,6 +18,37 @@ See `tests/ablation_lab/` for the compact public ablation record. This
 update is performance and statistical-screening evidence only; it does not
 establish cryptographic security.
 
+## 2026-05-21 Feedback-Mixed Fast Stream Candidate Update
+
+The local optimization branch now includes feedback-mixed stream candidates:
+`fast8x384mix`, `fast8x512mix`, `fast8x768mix`, and `fast8x1024mix`. They keep
+the same 8-round initialization and 4-round stream step as `fast8x`, but widen
+the output rate and chain the xmix extraction through state-derived carry
+terms. They are opt-in stream variants, not baseline replacements.
+
+In the latest portable `-O3` 256 MiB stream run, the measured throughputs were:
+
+| Variant | Throughput | Current interpretation |
+|---|---:|---|
+| `baseline` | 79.971 MiB/s | Default reference path. |
+| `fast8x` | 150.014 MiB/s | Original optimized stream path. |
+| `fast8x384mix` | 185.298 MiB/s | Faster but below the target. |
+| `fast8x512mix` | 238.321 MiB/s | Useful middle candidate. |
+| `fast8x768mix` | 316.224 MiB/s | Crossed 300 MiB/s but has a PractRand low-bit watch item. |
+| `fast8x1024mix` | 375.694 MiB/s | Current best local stream candidate. |
+
+`fast8x1024mix` passed the local 64 MiB low-bit diagnostic, SmokeRand express
+7/7, PractRand to 1 GiB with no anomalies, and TestU01 SmallCrush 15/15 in
+this pass. `fast8x768mix` passed the internal low-bit diagnostic and SmokeRand
+express, but PractRand reported Low4/64 DC6 unusual rows at 16 MiB and 256
+MiB. It should remain a warning example until the low-bit behavior is
+understood.
+
+The hash path did not receive the same speedup. A direct C API benchmark of
+`tricube_hash()` measured about 20.85 MiB/s on 1 MiB and 16 MiB messages in
+this local run. The new speed result is therefore a stream/XOF result, not a
+general hash-throughput result.
+
 ## 2026-05-20 Probe/Screens Reproducibility Update
 
 The black-box development probes have been moved from result-only descriptions
@@ -50,11 +81,11 @@ machine-specific result snapshots. Reproduce them with:
 ```bash
 python3 tests/crypto_analysis/run_all_screens.py \
   --profile quick \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --out tests/crypto_analysis/results/quick-latest
 
 python3 tests/crypto_analysis/screens/low_bit_diagnostics.py \
-  --variants baseline,fast8x \
+  --variants baseline,fast8x,fast8x1024mix \
   --bytes 16777216 \
   --out tests/crypto_analysis/results/low-bit-latest
 
@@ -144,8 +175,11 @@ Gröbner-basis, full ANF, or invariant analysis.
 
 | Implementation / mode | Throughput | Notes |
 |---|---:|---|
-| Experimental C `fast8x` stream variant | 132.655 MiB/s | 256 MiB ablation-lab run; explicit opt-in variant. |
-| Released C baseline stream in same ablation harness | 69.796 MiB/s | Same 256 MiB benchmark run as `fast8x`. |
+| Experimental C `fast8x1024mix` stream variant | 375.694 MiB/s | Latest local 256 MiB run; explicit opt-in feedback-mixed variant. |
+| Experimental C `fast8x768mix` stream variant | 316.224 MiB/s | Crossed speed target but retained PractRand low-bit watch item. |
+| Experimental C `fast8x512mix` stream variant | 238.321 MiB/s | Latest local 256 MiB run; middle candidate. |
+| Experimental C `fast8x` stream variant | 150.014 MiB/s | Latest local 256 MiB run; original opt-in fast path. |
+| Released C baseline stream in same local harness | 79.971 MiB/s | Same latest 256 MiB benchmark run as the feedback-mixed variants. |
 | `tricube_tc256_xof_fast` | 80.158 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
 | `tricube_geo256_chain_fast` | 62.255 MiB/s | Python harness candidate, 1 MiB stream sanity run. |
 | `tricube_tetra_block256_chain_fast` | 57.276 MiB/s | Python harness candidate, 1 MiB stream sanity run. |

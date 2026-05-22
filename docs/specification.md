@@ -31,10 +31,10 @@ security for real deployments. TriCube must not be used for passwords,
 signatures, message authentication, key derivation, encryption, consensus, or
 any other security-critical purpose.
 
-The optimized `fast8x` stream path is specified only as an experimental stream
-variant. Rejected ablation-lab variants such as `fast8x512`, `fast4x`, and
-other high-throughput candidates are not public baseline schemes in this
-repository.
+The optimized `fast8x` stream path and the feedback-mixed `fast8x*mix` paths
+are specified only as experimental stream variants. They are opt-in testing
+paths for stream/XOF research. They are not the default baseline, and they are
+not security recommendations.
 
 ## 1.1 Diagrams
 
@@ -453,19 +453,84 @@ squeeze_rate64(S, c, output, up to 192 bytes)
 
 The CLI writes stream data in 1 MiB chunks, but chunking does not affect output.
 
+### Experimental Fast Stream Modes
+
+The experimental stream variants use the same seed tweak, stream counter words,
+absorb routine, permutation, and deterministic byte order as baseline stream
+mode. They differ in three places:
+
+1. a separate stream domain tag;
+2. fewer stream initialization and per-step permutation rounds;
+3. a wider output rate and, for the `*mix` variants, a feedback extraction
+   layer.
+
+The `fast8x` variant uses domain tag `TC-TETRA256-V2/STREAM/FAST8X`, 8
+initialization rounds, 4 rounds per stream step, a 256-byte output rate, and
+`squeeze_rate64_xmix`.
+
+The feedback-mixed variants use the same 8-round initialization and 4-round
+stream step as `fast8x`, but widen the output rate and use
+`squeeze_rate64_xmix_feedback`. That extraction layer first computes the xmix
+word and then folds it with two carry words derived from the current state,
+round constants, and counter. The carry words are updated after each emitted
+64-bit word. This makes the wider-rate output a chained TriCube-family
+extraction path rather than raw independent reads from the state.
+
+The feedback-mixed stream domain tags are:
+
+| Variant | Stream domain tag |
+|---|---|
+| `fast8x384mix` | `TC-TETRA256-V2/STREAM/FAST8X384MIX` |
+| `fast8x512mix` | `TC-TETRA256-V2/STREAM/FAST8X512MIX` |
+| `fast8x768mix` | `TC-TETRA256-V2/STREAM/FAST8X768MIX` |
+| `fast8x1024mix` | `TC-TETRA256-V2/STREAM/FAST8X1024MIX` |
+
+The feedback extraction pseudocode is:
+
+```text
+counter_mod = counter mod 768
+carry0 = S[(counter + 27) mod 32]
+         xor ROUND_CONSTANTS[(37 * counter_mod + 17) mod 768]
+         xor counter * 0xD6E8FEB86659FD93
+carry1 = S[(5 * counter + 11) mod 32]
+         + ROUND_CONSTANTS[(41 * counter_mod + 23) mod 768]
+
+for output word j:
+    word = xmix_word(S, counter, j)
+    fold = carry0 + rotl64(carry1 xor word xor rc0[j], rf[j])
+    word = word xor rotl64(fold, 17) xor rotl64(fold + rc1[j], 43)
+    word = word + rotl64(word xor carry0 xor S[(a[j] + e[j]) mod 32], 29)
+    word = word xor (word >> 31) xor (word >> 47)
+    word = word + rotl64(word xor carry1, 23)
+    word = word xor (word >> 33)
+    carry0 = rotl64(carry0 + word + rc0[j] + j, 27)
+    carry1 = carry1 xor rotl64(carry0 xor rc1[j] xor S[d[j]], 39)
+    emit uint64_le(word)
+```
+
+The symbols `a[j]`, `d[j]`, `e[j]`, `rc0[j]`, `rc1[j]`, and `rf[j]` are the
+precomputed xmix schedule entries for `counter_mod` and output word `j`.
+Precomputation is an implementation optimization; it must not change the
+defined output.
+
 ## 11. Baseline vs Experimental Variants
 
-Only the baseline and `fast8x` are implemented in this repository.
+The baseline is the default public reference stream. The faster variants are
+experimental opt-in stream candidates for testing.
 
 | Variant | Purpose | Init rounds | Step rounds | Output rate | Output layer | Status |
 |---|---|---:|---:|---:|---|---|
 | `baseline` | Preserved public reference stream | 12 | 6 | 192 bytes | `squeeze_rate64` | default |
-| `fast8x` | Faster stream/XOF testing path | 8 | 4 | 256 bytes | `squeeze_rate64_xmix` | experimental opt-in |
+| `fast8x` | Original faster stream/XOF testing path | 8 | 4 | 256 bytes | `squeeze_rate64_xmix` | experimental opt-in |
+| `fast8x384mix` | Feedback-mixed wider-rate stream test | 8 | 4 | 384 bytes | `squeeze_rate64_xmix_feedback` | experimental opt-in |
+| `fast8x512mix` | Feedback-mixed wider-rate stream test | 8 | 4 | 512 bytes | `squeeze_rate64_xmix_feedback` | experimental opt-in |
+| `fast8x768mix` | Feedback-mixed speed target candidate | 8 | 4 | 768 bytes | `squeeze_rate64_xmix_feedback` | experimental opt-in; PractRand low-bit watch |
+| `fast8x1024mix` | Fastest current local stream candidate | 8 | 4 | 1024 bytes | `squeeze_rate64_xmix_feedback` | experimental opt-in; needs long batteries |
 
 The `fast8x` variant is domain-separated with tag
-`TC-TETRA256-V2/STREAM/FAST8X`. It is available through the C API and CLI, but
-it does not replace the baseline. Faster ablation-lab variants are not public
-reference schemes in this repository.
+`TC-TETRA256-V2/STREAM/FAST8X`. The feedback-mixed variants use the domain
+tags listed above. All of them are available through the generic C stream
+variant API and CLI, but none of them replaces the baseline.
 
 ## 12. Test Vectors
 
@@ -478,6 +543,10 @@ These vectors are produced by the current C CLI.
 | XOF `abc`, 64 bytes | `616263` | `6118c4b547c28533b968d6b7fc0b171817d8d9b1ced9e8c832dc7903e73baadcb6ce828c5f50d697bffddaef772c0b89d9314970df8cb5f15e95af6143e0667c` |
 | Baseline stream seed 123, first 64 bytes | seed `123` | `9ccace5701711cc2b47c06bf5a1a2b2b0bb5df09a8fb47a473ea18e34fef3695b7e233322a0b04a691402be1c630f070d954848a5c4013e8c745968288216d98` |
 | Experimental fast8x stream seed 123, first 64 bytes | seed `123`, `--variant fast8x` | `33d4d2da3afff406189a50b42322c03b2f1f9c411444d2b7347561fb9a882b3f4fcd0bbf306434b88a634e51d3f026e1466469adc8b688d4504f65355bb643ee` |
+| Experimental fast8x384mix stream seed 123, first 64 bytes | seed `123`, `--variant fast8x384mix` | `a12bb92b0c77e5c7541689708b248108829a937ae37c6b43b4717eb30725fee25b8fd9b74e8fcc989ee6861f49d4b2aa2705bce679198423025eaa5309a87833` |
+| Experimental fast8x512mix stream seed 123, first 64 bytes | seed `123`, `--variant fast8x512mix` | `b80cc954407ef991b5bc4cb98a0681a864fa963b3d61a0bc5b0f2ee1b7751f88e4312344cec6fe7a8706fa4a6316d7c041425ced180b856e652f37792655bb07` |
+| Experimental fast8x768mix stream seed 123, first 64 bytes | seed `123`, `--variant fast8x768mix` | `cd616a8054b827834fa5261e6379b08623bc93cc6c65c7c8a55880cd025e13fe5e4699fbd6e22c58e9d526bbea5955576223e1a1d3ddedb86dd983446fb4ddad` |
+| Experimental fast8x1024mix stream seed 123, first 64 bytes | seed `123`, `--variant fast8x1024mix` | `00270e07d3944d4f9342df5de1cde06e25c4aaf08909678ffaf4c8334e0ee3a095fead312380ef7c1a80d32c060203f225700fa3e3ebd073fd2f1064bb0a9ad1` |
 
 The packaged vector file is `python/src/tricube/data/tricube_vectors.json`.
 
